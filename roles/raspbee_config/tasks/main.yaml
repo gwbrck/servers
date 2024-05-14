@@ -1,0 +1,109 @@
+---
+- name: Check OS (raspbee)
+  fail:
+    msg: "Not a Debian based system!"
+  when: ansible_distribution != 'Debian'
+
+- name: Install basic packages
+  package:
+    name:
+      - i2c-tools
+      - build-essential
+      - raspberrypi-kernel-headers
+      - curl
+    state: present
+  register: build_tools
+
+- name: "Adjust uart in /boot/config.txt"
+  lineinfile:
+    regexp: '^enable_uart='
+    path: "/boot/firmware/config.txt"
+    line: 'enable_uart=1'
+  register: boot_uart
+
+- name: "Adjust disable-wifi in /boot/config.txt"
+  lineinfile:
+    regexp: '^dtoverlay=disable-wifi'
+    path: "/boot/firmware/config.txt"
+    line: 'dtoverlay=disable-wifi'
+  register: boot_wifi
+
+- name: "Adjust miniuart-bt in /boot/config.txt"
+  lineinfile:
+    regexp: '^dtoverlay=miniuart-bt'
+    path: "/boot/firmware/config.txt"
+    line: 'dtoverlay=miniuart-bt'
+  register: boot_bt
+
+- name: Disable serial hardware
+  command: raspi-config nonint do_serial_hw 0
+
+- name: Enable serial console
+  command: raspi-config nonint do_serial_cons 1
+
+- name: "Restart machine"
+  reboot:
+    msg: "Reboot by Ansible, because /boot/config.txt changed."
+    reboot_timeout: 300   # (= 5 minutes)
+  when: build_tools.changed or boot_uart.changed or boot_bt.changed or boot_wifi.changed
+
+- name: Check if RTC kernel module is installed
+  command: modinfo rtc-pcf85063
+  register: modinfo_rtc
+  changed_when: False
+  ignore_errors: True
+
+# build the module if it is not installed
+- block:
+  - name: Download master.zip
+    get_url:
+      url: https://github.com/dresden-elektronik/raspbee2-rtc/archive/master.zip
+      dest: "/home/{{ ansible_user }}/master.zip"
+      owner: "{{ ansible_user }}" 
+      group: "{{ ansible_user }}"
+      mode: 0440
+    register: download_master
+
+
+  - name: Unpack master.zip
+    unarchive:
+      src: "/home/{{ ansible_user }}/master.zip"
+      dest: "/home/{{ ansible_user }}"
+      remote_src: yes
+      owner: "{{ ansible_user }}"  
+      group: "{{ ansible_user }}" 
+      mode: 0770
+      creates: "/home/{{ ansible_user }}/raspbee2-rtc-master"
+
+
+  - name: Build kernel module
+    shell: "cd /home/{{ ansible_user }}/raspbee2-rtc-master && make"
+    become: true
+    become_user: "{{ ansible_user }}"
+
+
+  - name: Install kernel module
+    shell: "cd /home/{{ ansible_user }}/raspbee2-rtc-master && make install"
+    become: true
+    become_user: root
+
+  - name: "Restart machine"
+    reboot:
+      msg: "Reboot by Ansible, because /boot/config.txt changed."
+      reboot_timeout: 300   # (= 5 minutes)
+
+  - name: Configure system time to RTC module
+    shell: "hwclock --systohc"
+    become: true
+
+  when: modinfo_rtc.rc != 0
+
+- name: Remove source file for kernel module
+  file:
+    path: /home/{{ ansible_user }}/master.zip
+    state: absent
+
+- name: Remove build files for kernel module
+  file:
+    path: /home/{{ ansible_user }}/raspbee2-rtc-master
+    state: absent

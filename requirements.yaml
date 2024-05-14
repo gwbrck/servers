@@ -1,0 +1,9 @@
+---
+roles:
+  - name: geerlingguy.pip
+  - name: geerlingguy.docker
+  - name: geerlingguy.security
+  - name: geerlingguy.firewall
+
+collections:
+  - name: ansible.posix

@@ -1,0 +1,23 @@
+- name: SSH juggle Port
+  hosts: all
+  gather_facts: false
+  pre_tasks:
+    - import_tasks: tasks/ssh_juggle_port.yaml
+
+- hosts: all
+  name: 
+  become: true
+  roles:
+    - system
+    - geerlingguy.security
+
+- hosts: hass
+  become: true
+  roles:
+    - raspbee_config
+
+- hosts: all
+  become: true
+  roles:
+    - geerlingguy.docker
+    - containers
