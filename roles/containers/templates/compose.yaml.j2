@@ -1,0 +1,169 @@
+services:
+  watchtower:
+    image: containrrr/watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  scraped2rss:
+    image: ghcr.io/gwbrck/scraped2rss:latest
+    container_name: scraped2rss
+    environment:
+      - UEBER_TOKEN={{ lookup('community.general.passwordstore', 'dev/uebermedien') }}
+    networks:
+      - back
+    ports:
+      - 3111:3111
+    restart: unless-stopped
+  # playwright-chrome:
+  #   hostname: playwright-chrome
+  #   image: dgtlmoon/sockpuppetbrowser:latest
+  #   cap_add:
+  #     - SYS_ADMIN
+  #   restart: unless-stopped
+  #   ports:
+  #     - 3000:3000
+  #   networks:
+  #     - back
+  #   environment:
+  #     - SCREEN_WIDTH=1920
+  #     - SCREEN_HEIGHT=1024
+  #     - SCREEN_DEPTH=16
+  #     - MAX_CONCURRENT_CHROME_PROCESSES=10
+  changedetection:
+    image: ghcr.io/dgtlmoon/changedetection.io
+    container_name: changedetection
+    hostname: changedetection
+    # environment:
+    #   - PLAYWRIGHT_DRIVER_URL=ws://playwright-chrome:3000
+    volumes:
+      - changedetection-data:/datastore
+    networks:
+      - back
+    ports:
+      - 5000:5000
+    # depends_on:
+    #   - playwright-chrome
+    restart: always
+  freshrss:
+    image: freshrss/freshrss:latest
+    container_name: freshrss
+    environment:
+      TZ: Europe/Berlin
+      CRON_MIN: "2,32"
+      FRESHRSS_INSTALL: |-
+        --api_enabled
+        --db-base {{ lookup('community.general.passwordstore', 'dev/freshrss', subkey='db_base') }}
+        --db-host freshrss-db 
+        --db-password {{ lookup('community.general.passwordstore', 'dev/freshrss', subkey='db_password') }}
+        --db-type pgsql
+        --db-user {{ lookup('community.general.passwordstore', 'dev/freshrss', subkey='db_user') }}
+        --default_user admin 
+        --language de
+      FRESHRSS_USER: |-
+        --api_password {{ lookup('community.general.passwordstore', 'dev/freshrss', subkey='api_password') }}
+        --language en
+        --password {{ lookup('community.general.passwordstore', 'dev/freshrss') }}
+        --user admin
+    volumes:
+      - "{{ docker_dir }}/freshrss/data:/var/www/FreshRSS/data"
+      - "{{ docker_dir }}/freshrss/extensions:/var/www/FreshRSS/extensions"
+    ports:
+      - 80:80
+    networks:
+      - front
+      - back
+    restart: always
+  read:
+    image: phpdockerio/readability-js-server
+    restart: always
+    networks:
+      - back
+  merc:
+    image: wangqiru/mercury-parser-api
+    restart: always
+    networks:
+      - back
+  freshrss-db:
+    image: postgres:14
+    container_name: freshrss-db
+    networks:
+      - back
+    restart: unless-stopped
+    volumes:
+      - "{{ docker_dir }}/freshrss/db:/var/lib/postgresql/data"
+    environment:
+      POSTGRES_DB: "{{ lookup('community.general.passwordstore', 'dev/freshrss', subkey='db_base') }}"
+      POSTGRES_USER: "{{ lookup('community.general.passwordstore', 'dev/freshrss', subkey='db_user') }}"
+      POSTGRES_PASSWORD: "{{ lookup('community.general.passwordstore', 'dev/freshrss', subkey='db_password') }}"
+
+  adminer:
+    image: adminer
+    restart: always
+    networks:
+      - back
+    ports:
+      - 8080:8080
+
+{% if tunnel == true %}
+  tunnel:
+    container_name: cloudflared-tunnel
+    image: cloudflare/cloudflared
+    restart: unless-stopped
+    command: tunnel run
+    networks:
+      - front
+    environment:
+      - TUNNEL_TOKEN={{ lookup('community.general.passwordstore', 'dev/cloudflare', subkey='token') }}
+
+  deconz:
+    image: deconzcommunity/deconz
+    container_name: deconz
+    restart: always
+    privileged: true
+    ports:
+      - 8887:8887
+      - 4443:4443
+      - 5900:5900
+      - 6080:6080
+    volumes:
+      - "{{ docker_dir }}/deCONZ:/opt/deCONZ"
+    devices:
+      - /dev/ttyAMA0
+    environment:
+      - TZ=Europe/Berlin
+      - DECONZ_DEVICE=/dev/ttyACM0
+      - DECONZ_WEB_PORT=8887
+      - DECONZ_NOVNC_PORT=6080
+      - DECONZ_WS_PORT=4443
+      - DECONZ_VNC_MODE=1
+      - DECONZ_VNC_PORT=5900
+      - DECONZ_VNC_PASSWORD={{ lookup('community.general.passwordstore', 'dev/deconz_vnc') }}
+      - DEBUG_INFO=1
+      - DEBUG_APS=0
+      - DEBUG_ZCL=0
+      - DEBUG_ZDP=0
+      - DEBUG_OTA=0
+
+  homebridge:
+    image: homebridge/homebridge:latest
+    restart: always
+    # port on 8581
+    network_mode: host
+    volumes:
+      - "{{ docker_dir }}/homebridge:/homebridge"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10mb"
+        max-file: "1"
+
+{% endif %}
+
+volumes:
+  changedetection-data:
+
+networks:
+  front:
+    driver: bridge
+  back:
+    driver: bridge

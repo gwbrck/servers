@@ -1,0 +1,23 @@
+---
+- name: Make sure that the docker folders exists
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    state: directory
+  loop:
+    - "{{ docker_compose_dir }}"
+    - "{{ docker_dir }}"
+
+- name: Copy the compose file
+  template:
+    src: templates/compose.yaml.j2
+    dest: "{{ docker_compose_dir }}/compose.yaml"
+
+- include_tasks: freshrss_extensions.yaml
+
+- name: Run container
+  become: True
+  shell:
+    cmd: "docker compose up -d"
+    chdir: "{{ docker_compose_dir }}"
