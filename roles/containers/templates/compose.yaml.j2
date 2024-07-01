@@ -114,49 +114,7 @@ services:
       - front
     environment:
       - TUNNEL_TOKEN={{ lookup('community.general.passwordstore', 'dev/cloudflare', subkey='token') }}
-
-  deconz:
-    image: deconzcommunity/deconz
-    container_name: deconz
-    restart: always
-    privileged: true
-    ports:
-      - 8887:8887
-      - 4443:4443
-      - 5900:5900
-      - 6080:6080
-    volumes:
-      - "{{ docker_dir }}/deCONZ:/opt/deCONZ"
-    devices:
-      - /dev/ttyAMA0
-    environment:
-      - TZ=Europe/Berlin
-      - DECONZ_DEVICE=/dev/ttyACM0
-      - DECONZ_WEB_PORT=8887
-      - DECONZ_NOVNC_PORT=6080
-      - DECONZ_WS_PORT=4443
-      - DECONZ_VNC_MODE=1
-      - DECONZ_VNC_PORT=5900
-      - DECONZ_VNC_PASSWORD={{ lookup('community.general.passwordstore', 'dev/deconz_vnc') }}
-      - DEBUG_INFO=1
-      - DEBUG_APS=0
-      - DEBUG_ZCL=0
-      - DEBUG_ZDP=0
-      - DEBUG_OTA=0
-
-  homebridge:
-    image: homebridge/homebridge:latest
-    restart: always
-    # port on 8581
-    network_mode: host
-    volumes:
-      - "{{ docker_dir }}/homebridge:/homebridge"
-    logging:
-      driver: json-file
-      options:
-        max-size: "10mb"
-        max-file: "1"
-
+      
 {% endif %}
 
 volumes:

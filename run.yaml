@@ -11,11 +11,6 @@
     - system
     - geerlingguy.security
 
-- hosts: hass
-  become: true
-  roles:
-    - raspbee_config
-
 - hosts: all
   become: true
   roles:
