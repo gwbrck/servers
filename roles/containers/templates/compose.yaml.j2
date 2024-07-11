@@ -60,7 +60,7 @@ services:
         --default_user admin 
         --language de
       FRESHRSS_USER: |-
-        --api_password {{ lookup('community.general.passwordstore', 'dev/freshrss', subkey='api_password') }}
+        --api-password {{ lookup('community.general.passwordstore', 'dev/freshrss', subkey='api_password') }}
         --language en
         --password {{ lookup('community.general.passwordstore', 'dev/freshrss') }}
         --user admin
