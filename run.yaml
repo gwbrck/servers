@@ -15,4 +15,4 @@
   become: true
   roles:
     - geerlingguy.docker
-    - containers
+    - portainer
