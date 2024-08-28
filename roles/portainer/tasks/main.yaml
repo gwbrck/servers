@@ -1,0 +1,23 @@
+---
+- name: Create new volume
+  community.docker.docker_volume:
+    name: portainer-data
+
+- name: Deploy portainer
+  community.docker.docker_container:
+    name: portainer
+    image: "docker.io/portainer/portainer-ce:latest"
+    ports:
+      - "9443:9443"
+    volumes:
+      - /run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    restart_policy: unless-stopped
+
+- name: Deploy Watchtower container
+  docker_container:
+    name: watchtower
+    image: "containrrr/watchtower:latest"
+    state: started
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
