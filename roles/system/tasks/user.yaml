@@ -47,3 +47,9 @@
 
 - name: Clear gathered facts from all currently targeted hosts
   ansible.builtin.meta: reset_connection
+
+- name: Entferne Default-User
+  ansible.builtin.user:
+    name: "{{ lookup('community.general.passwordstore', 'infra/initial_creds', subkey='user') }}"  
+    state: absent     # sorgt dafür, dass der Benutzer gelöscht wird
+    remove: yes       # löscht auch das Home-Verzeichnis und Mail-Spool
