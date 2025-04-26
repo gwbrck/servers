@@ -1,48 +1,48 @@
 ---
-- name: SSH Port Juggle | Try connecting via SSH
+- name: SSH Port Juggle | Try connecting via SSH (custom port)
   wait_for_connection:
     timeout: 5
   ignore_errors: true
   register: _ssh_port_result
 
-- name: SSH Port Juggle | Set the ansible_port to the fallback default port
+- name: SSH Port Juggle | Set the ansible_ssh_port to the fallback default port (22)
   set_fact:
     ansible_ssh_port: "22"
-  when:
-    - _ssh_port_result is failed
+  when: _ssh_port_result is failed
 
-- name: SSH Port Juggle | Try connecting again
+- name: SSH Port Juggle | Try connecting again (port 22)
   wait_for_connection:
     timeout: 5
   ignore_errors: true
   register: _ssh_port_default_result
-  when:
-    - _ssh_port_result is failed
+  when: _ssh_port_result is failed
 
-- name: SSH Port Juggle | Try user
+- name: "SSH Port Juggle | Try with initial credentials"
   set_fact:
     ansible_ssh_port: "22"
-    ansible_ssh_user: "{{ ansible_user }}"
-    ansible_ssh_password: "{{ lookup('community.general.passwordstore', user_passwordstore_entry) }}"
+    ansible_ssh_user: "{{ lookup('community.general.passwordstore', 'infra/initial_creds', subkey='user') }}"
+    ansible_ssh_password: "{{ lookup('community.general.passwordstore', 'infra/initial_creds', subkey='pass') }}"
     ansible_connection: "paramiko"
   when:
     - _ssh_port_result is failed
     - _ssh_port_default_result is failed
+  
+- name: Verbindung neu aufbauen
+  meta: reset_connection
 
-- name: Try root
+- name: SSH Port Juggle | Final connection attempt with initial credentials
   wait_for_connection:
     timeout: 5
   ignore_errors: true
-  register: _ssh_port_root_result
+  register: _ssh_final_creds_result
   when:
     - _ssh_port_result is failed
     - _ssh_port_default_result is failed
 
-- name: SSH Port Juggle | Fail
-  fail: msg="Neither the configured ansible_port {{ ansible_port }} nor the fallback port 22 were reachable"
+- name: SSH Port Juggle | Fail if all connection attempts failed
+  fail:
+    msg: "Neither the configured ansible_ssh_port nor the fallback port 22 nor the initial credentials were successful for SSH connection"
   when:
     - _ssh_port_result is failed
-    - _ssh_port_default_result is defined
     - _ssh_port_default_result is failed
-    - _ssh_port_root_result is defined
-    - _ssh_port_root_result is failed
+    - _ssh_final_creds_result is failed

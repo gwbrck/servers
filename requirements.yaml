@@ -7,3 +7,4 @@ roles:
 
 collections:
   - name: ansible.posix
+  - name: artis3n.tailscale
