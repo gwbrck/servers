@@ -1,0 +1,63 @@
+- name: System Defaults
+  hosts: all
+  become: true
+  vars:
+    security_sudoers_passwordless:
+      - "{{ ansible_user }}"
+    security_ssh_port: 6861
+    security_ssh_password_authentication: "no"
+    security_ssh_permit_root_login: "no"
+    security_ssh_permit_empty_password: "no"
+    security_autoupdate_enabled: true
+    security_autoupdate_reboot: true
+    security_autoupdate_reboot_time: "04:00"
+    security_fail2ban_enabled: true
+  roles:
+    - geerlingguy.security
+    - mydefaults
+    - geerlingguy.docker
+
+- name: PiVPN
+  hosts: pivpn
+  become: true
+  gather_facts: true
+  pre_tasks:
+    - name: Enable IPv4 forwarding
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_forward
+        value: "1"
+        sysctl_set: true
+        state: present
+      notify: Reload sysctl
+
+    - name: Enable IPv6 forwarding
+      ansible.posix.sysctl:
+        name: net.ipv6.conf.all.forwarding
+        value: "1"
+        sysctl_set: true
+        state: present
+      notify: Reload sysctl
+
+  roles:
+    - role: artis3n.tailscale.machine
+      vars:
+        verbose: true
+        tailscale_authkey: "{{ tailscale_router_authkey }}"
+        tailscale_tags:
+          - "server"
+        tailscale_args: >-
+          --advertise-exit-node
+          --advertise-routes={{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.prefix }}
+        tailscale_oauth_ephemeral: false
+        tailscale_oauth_preauthorized: false
+
+  handlers:
+    - name: Reload sysctl
+      ansible.builtin.command: sysctl -p
+      changed_when: false
+
+- name: Setup vdirsyncer
+  hosts: pivpn
+  become: true
+  roles:
+    - vdirsyncer

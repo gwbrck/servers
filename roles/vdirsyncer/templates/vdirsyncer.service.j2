@@ -1,0 +1,9 @@
+[Unit]
+Description=Vdirsyncer iCloud Sync
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/vdirsyncer/env
+User=vdirsyncer
+ExecStartPre=/bin/sh -c 'test -d /var/lib/vdirsyncer/.vdirsyncer/status || /usr/bin/vdirsyncer discover'
+ExecStart=/usr/bin/vdirsyncer sync tud_to_icloud

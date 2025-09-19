@@ -1,0 +1,31 @@
+- name: "Validate hashed password availability"
+  ansible.builtin.assert:
+    that:
+      - mydefaults_password_hash | length > 0
+    fail_msg: "mydefaults_password_hash is empty. Provide a hashed password via SOPS."
+
+- name: "Install global alias profile script"
+  ansible.builtin.copy:
+    dest: /etc/profile.d/99-ansible-aliases.sh
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      # Convenience aliases managed by Ansible
+      alias l='ls -la'
+      alias ..='cd ..'
+
+- name: "Lock the password for the 'root' user"
+  ansible.builtin.user:
+    name: root
+    state: present
+    password: "{{ mydefaults_password_hash }}"
+    password_lock: true
+
+- name: "Lock the password for the current remote user"
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    state: present
+    password: "{{ mydefaults_password_hash }}"
+    password_lock: true
+  when: ansible_user != 'root'
