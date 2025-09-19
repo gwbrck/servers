@@ -1,10 +1,8 @@
----
 roles:
-  - name: geerlingguy.pip
-  - name: geerlingguy.docker
   - name: geerlingguy.security
-  - name: geerlingguy.firewall
-
+  - name: geerlingguy.docker
 collections:
-  - name: ansible.posix
+  - name: community.sops
   - name: artis3n.tailscale
+
+

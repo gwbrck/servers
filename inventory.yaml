@@ -1,0 +1,4 @@
+all:
+  hosts:
+    pivpn:
+      ansible_user: gwbrck

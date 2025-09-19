@@ -1,0 +1,5 @@
+sops_file: "{{ lookup('env', 'HOME') }}/Documents/Dots/server_infra.yaml"
+sops: "{{ lookup('community.sops.sops', sops_file) | from_yaml }}"
+vdirsyncer: "{{ sops.vdirsyncer }}"
+mydefaults_password_hash: "{{ sops.mydefaults.password_hashed | default('') }}"
+tailscale_router_authkey: "{{ sops.tailscale.client_secret }}"

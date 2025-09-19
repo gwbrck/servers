@@ -1,0 +1,3 @@
+---
+# Hash for accounts that should have their passwords rotated and locked.
+mydefaults_password_hash: ""

@@ -1,0 +1,70 @@
+---
+- name: Ensure required packages are installed
+  ansible.builtin.package:
+    name:
+      - vdirsyncer
+    state: present
+
+- name: Ensure vdirsyncer system user exists
+  ansible.builtin.user:
+    name: vdirsyncer
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: true
+    home: /var/lib/vdirsyncer
+
+- name: Ensure vdirsyncer config dir exists
+  ansible.builtin.file:
+    path: /var/lib/vdirsyncer/.vdirsyncer
+    state: directory
+    owner: vdirsyncer
+    group: vdirsyncer
+    mode: "0700"
+
+- name: Deploy vdirsyncer config
+  no_log: true
+  ansible.builtin.template:
+    src: config.j2
+    dest: /var/lib/vdirsyncer/.vdirsyncer/config
+    owner: vdirsyncer
+    group: vdirsyncer
+    mode: "0600"
+  notify:
+    - Run vdirsyncer sync
+
+- name: Ensure env dir exists
+  ansible.builtin.file:
+    path: /etc/vdirsyncer
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: Deploy vdirsyncer environment file
+  no_log: true
+  ansible.builtin.template:
+    src: env.j2
+    dest: /etc/vdirsyncer/env
+    owner: root
+    group: root
+    mode: "0600"
+  notify:
+    - Run vdirsyncer sync
+
+- name: Deploy systemd service unit
+  ansible.builtin.template:
+    src: vdirsyncer.service.j2
+    dest: /etc/systemd/system/vdirsyncer.service
+    mode: "0644"
+  notify:
+    - Reload systemd daemon
+
+- name: Deploy systemd timer unit
+  ansible.builtin.template:
+    src: vdirsyncer.timer.j2
+    dest: /etc/systemd/system/vdirsyncer.timer
+    mode: "0644"
+  notify:
+    - Reload systemd daemon
+    - Enable and start vdirsyncer timer
+    - Run vdirsyncer sync
