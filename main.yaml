@@ -55,9 +55,3 @@
     - name: Reload sysctl
       ansible.builtin.command: sysctl -p
       changed_when: false
-
-- name: Setup vdirsyncer
-  hosts: pivpn
-  become: true
-  roles:
-    - vdirsyncer
