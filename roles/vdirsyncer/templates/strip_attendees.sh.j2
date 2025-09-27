@@ -25,7 +25,8 @@ for path in clean_dir.rglob("*.ics"):
     text = path.read_text(encoding="utf-8")
     new_text, removed = attendee_block.subn("", text)
     if removed:
-        path.write_text(new_text, encoding="utf-8")
+        serialized = new_text.replace("\n", "\r\n").encode("utf-8")
+        path.write_bytes(serialized)
         relative = path.relative_to(clean_dir)
         print(f"[strip_attendees] Removed {removed} attendee blocks from {relative}")
 
