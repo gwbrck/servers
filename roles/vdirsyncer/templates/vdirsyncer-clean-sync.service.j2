@@ -1,0 +1,11 @@
+[Unit]
+Description=Sync TUD calendar via attendee stripping into iCloud
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/vdirsyncer/env
+User=vdirsyncer
+ExecStartPre=/bin/sh -c 'test -d /var/lib/vdirsyncer/.vdirsyncer/status || /usr/bin/vdirsyncer discover'
+ExecStart=/usr/bin/vdirsyncer sync tud_to_local
+ExecStartPost=/usr/local/bin/strip_attendees.sh
+ExecStartPost=/usr/bin/vdirsyncer sync local_to_icloud

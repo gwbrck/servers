@@ -3,13 +3,13 @@
   ansible.builtin.systemd:
     daemon_reload: true
 
-- name: Enable and start vdirsyncer timer
+- name: Enable and start attendee stripping timer
   ansible.builtin.systemd:
-    name: vdirsyncer.timer
+    name: vdirsyncer-clean-sync.timer
     enabled: true
     state: started
 
-- name: Run vdirsyncer sync
+- name: Run attendee stripping sync
   ansible.builtin.systemd:
-    name: vdirsyncer.service
+    name: vdirsyncer-clean-sync.service
     state: started
