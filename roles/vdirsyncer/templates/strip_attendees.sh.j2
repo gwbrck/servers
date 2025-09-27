@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CLEAN_DIR="/var/lib/vdirsyncer/localclean"
+
+if [[ ! -d "$CLEAN_DIR" ]]; then
+  echo "[strip_attendees] Clean directory '$CLEAN_DIR' not found" >&2
+  exit 1
+fi
+
+python3 - "$CLEAN_DIR" <<'PY'
+from __future__ import annotations
+
+import pathlib
+import re
+import sys
+
+clean_dir = pathlib.Path(sys.argv[1])
+if not clean_dir.exists():
+    raise SystemExit(1)
+
+attendee_block = re.compile(r"^ATTENDEE[:;].*(?:\r?\n[ \t].*)*\r?\n?", re.MULTILINE)
+
+for path in clean_dir.rglob("*.ics"):
+    text = path.read_text(encoding="utf-8")
+    new_text, removed = attendee_block.subn("", text)
+    if removed:
+        path.write_text(new_text, encoding="utf-8")
+        relative = path.relative_to(clean_dir)
+        print(f"[strip_attendees] Removed {removed} attendee blocks from {relative}")
+
+print("[strip_attendees] Completed attendee cleanup.")
+PY

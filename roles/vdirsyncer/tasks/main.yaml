@@ -21,6 +21,22 @@
     group: vdirsyncer
     mode: "0700"
 
+- name: Ensure vdirsyncer clean dir exists
+  ansible.builtin.file:
+    path: /var/lib/vdirsyncer/localclean
+    state: directory
+    owner: vdirsyncer
+    group: vdirsyncer
+    mode: "0700"
+
+- name: Ensure vdirsyncer clean collection dir exists
+  ansible.builtin.file:
+    path: /var/lib/vdirsyncer/localclean/cleaned
+    state: directory
+    owner: vdirsyncer
+    group: vdirsyncer
+    mode: "0700"
+
 - name: Deploy vdirsyncer config
   no_log: true
   ansible.builtin.template:
@@ -30,7 +46,7 @@
     group: vdirsyncer
     mode: "0600"
   notify:
-    - Run vdirsyncer sync
+    - Run attendee stripping sync
 
 - name: Ensure env dir exists
   ansible.builtin.file:
@@ -49,22 +65,32 @@
     group: root
     mode: "0600"
   notify:
-    - Run vdirsyncer sync
+    - Run attendee stripping sync
+
+- name: Deploy attendee stripping helper script
+  ansible.builtin.template:
+    src: strip_attendees.sh.j2
+    dest: /usr/local/bin/strip_attendees.sh
+    owner: root
+    group: root
+    mode: "0755"
+  notify:
+    - Run attendee stripping sync
 
 - name: Deploy systemd service unit
   ansible.builtin.template:
-    src: vdirsyncer.service.j2
-    dest: /etc/systemd/system/vdirsyncer.service
+    src: vdirsyncer-clean-sync.service.j2
+    dest: /etc/systemd/system/vdirsyncer-clean-sync.service
     mode: "0644"
   notify:
     - Reload systemd daemon
 
 - name: Deploy systemd timer unit
   ansible.builtin.template:
-    src: vdirsyncer.timer.j2
-    dest: /etc/systemd/system/vdirsyncer.timer
+    src: vdirsyncer-clean-sync.timer.j2
+    dest: /etc/systemd/system/vdirsyncer-clean-sync.timer
     mode: "0644"
   notify:
     - Reload systemd daemon
-    - Enable and start vdirsyncer timer
-    - Run vdirsyncer sync
+    - Enable and start attendee stripping timer
+    - Run attendee stripping sync

@@ -1,0 +1,10 @@
+[Unit]
+Description=Hourly vdirsyncer attendee-stripping sync
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+Unit=vdirsyncer-clean-sync.service
+
+[Install]
+WantedBy=timers.target
