@@ -13,29 +13,17 @@
     create_home: true
     home: /var/lib/vdirsyncer
 
-- name: Ensure vdirsyncer config dir exists
+- name: Ensure vdirsyncer directories exist
   ansible.builtin.file:
-    path: /var/lib/vdirsyncer/.vdirsyncer
+    path: "{{ item }}"
     state: directory
     owner: vdirsyncer
     group: vdirsyncer
     mode: "0700"
-
-- name: Ensure vdirsyncer clean dir exists
-  ansible.builtin.file:
-    path: /var/lib/vdirsyncer/localclean
-    state: directory
-    owner: vdirsyncer
-    group: vdirsyncer
-    mode: "0700"
-
-- name: Ensure vdirsyncer clean collection dir exists
-  ansible.builtin.file:
-    path: /var/lib/vdirsyncer/localclean/cleaned
-    state: directory
-    owner: vdirsyncer
-    group: vdirsyncer
-    mode: "0700"
+  loop:
+    - /var/lib/vdirsyncer/.vdirsyncer
+    - /var/lib/vdirsyncer/localclean
+    - /var/lib/vdirsyncer/localclean/cleaned
 
 - name: Deploy vdirsyncer config
   no_log: true

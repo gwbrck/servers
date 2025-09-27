@@ -1,11 +1,33 @@
 [Unit]
 Description=Sync TUD calendar via attendee stripping into iCloud
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 Type=oneshot
 EnvironmentFile=/etc/vdirsyncer/env
 User=vdirsyncer
 ExecStartPre=/bin/sh -c 'test -d /var/lib/vdirsyncer/.vdirsyncer/status || /usr/bin/vdirsyncer discover'
+WorkingDirectory=/var/lib/vdirsyncer
+CacheDirectory=vdirsyncer
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectControlGroups=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+SystemCallArchitectures=native
+CapabilityBoundingSet=
+AmbientCapabilities=
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadOnlyPaths=/etc/vdirsyncer
+ReadWritePaths=/var/lib/vdirsyncer
 ExecStart=/usr/bin/vdirsyncer sync tud_to_local
 ExecStartPost=/usr/local/bin/strip_attendees.sh
-ExecStartPost=/usr/bin/vdirsyncer sync local_to_icloud
+ExecStartPost=/usr/bin/vdirsyncer sync local_to_icloud --force-delete
