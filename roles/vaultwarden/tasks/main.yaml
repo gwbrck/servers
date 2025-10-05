@@ -33,6 +33,10 @@
     project_src: "{{ vaultwarden_compose_dir }}"
   register: output
 
+- name: Pull images
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ vaultwarden_compose_dir }}"
+
 - name: Show results
   ansible.builtin.debug:
     var: output
