@@ -1,0 +1,5 @@
+---
+vaultwarden_compose_dir: "/opt/vaultwarden"
+vaultwarden_compose_file: "docker-compose.yaml"
+vaultwarden_data_dir: "{{ vaultwarden_compose_dir }}/data"
+vaultwarden_internal_port: 8844

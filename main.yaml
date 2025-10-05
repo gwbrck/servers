@@ -61,3 +61,9 @@
   become: true
   roles:
     - vdirsyncer
+
+- name: Setup vaultwarden
+  hosts: pivpn
+  become: true
+  roles:
+    - vaultwarden
