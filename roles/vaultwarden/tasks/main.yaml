@@ -1,0 +1,39 @@
+---
+- name: Ensure Vaultwarden directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  become: true
+  loop:
+    - "{{ vaultwarden_compose_dir }}"
+    - "{{ vaultwarden_data_dir }}"
+
+- name: Deploy Vaultwarden Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ vaultwarden_compose_dir }}/{{ vaultwarden_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy Vaultwarden environment file
+  no_log: true
+  ansible.builtin.template:
+    src: vaultwarden.env.j2
+    dest: "{{ vaultwarden_compose_dir }}/.env"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Create and start services
+  community.docker.docker_compose_v2:
+    project_src: "{{ vaultwarden_compose_dir }}"
+  register: output
+
+- name: Show results
+  ansible.builtin.debug:
+    var: output
+    verbosity: 1
