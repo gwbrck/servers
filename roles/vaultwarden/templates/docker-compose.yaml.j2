@@ -10,7 +10,7 @@ services:
       - "{{ vaultwarden_data_dir }}:/data"
     labels:
       - "traefik.enable={{ vaultwarden_traefik_enable | default(true) | ternary('true', 'false') }}"
-      - "traefik.http.routers.{{ vaultwarden_traefik_router_name }}.rule=Host(`{{ vaultwarden_domain }}`)"
+      - "traefik.http.routers.{{ vaultwarden_traefik_router_name }}.rule=Host(`{{ vaultwarden_public_url }}`)"
       - "traefik.http.routers.{{ vaultwarden_traefik_router_name }}.entrypoints=websecure"
       - "traefik.http.routers.{{ vaultwarden_traefik_router_name }}.tls.certresolver={{ vaultwarden_traefik_cert_resolver }}"
       - "traefik.http.services.{{ vaultwarden_traefik_router_name }}.loadbalancer.server.port={{ vaultwarden_internal_port }}"
@@ -19,6 +19,6 @@ services:
 
 
 networks:
-  default:
+  {{ vaultwarden_traefik_network }}:
     name: {{ vaultwarden_traefik_network }}
     external: true
