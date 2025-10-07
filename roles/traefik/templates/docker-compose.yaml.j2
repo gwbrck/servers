@@ -41,6 +41,6 @@ services:
       - "traefik.http.routers.api.service=api@internal"
 
 networks:
-  default: 
+  {{ traefik_network_name }}:
     name: {{ traefik_network_name }}
     external: true
