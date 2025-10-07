@@ -1,0 +1,60 @@
+---
+- name: Ensure Traefik directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  become: true
+  loop:
+    - "{{ traefik_compose_dir }}"
+    - "{{ traefik_data_dir }}"
+
+- name: Ensure Traefik Docker network exists
+  community.docker.docker_network:
+    name: "{{ traefik_network_name }}"
+    state: present
+  become: true
+
+- name: Deploy Traefik environment file
+  ansible.builtin.template:
+    src: traefik.env.j2
+    dest: "{{ traefik_env_file }}"
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+  become: true
+
+- name: Ensure ACME storage file exists
+  ansible.builtin.file:
+    path: "{{ traefik_acme_file }}"
+    state: touch
+    owner: root
+    group: root
+    mode: "0600"
+  become: true
+
+- name: Deploy Traefik Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ traefik_compose_dir }}/{{ traefik_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+
+- name: Pull Traefik image
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ traefik_compose_dir }}"
+
+- name: Create and start Traefik service
+  community.docker.docker_compose_v2:
+    project_src: "{{ traefik_compose_dir }}"
+  register: traefik_up
+
+- name: Show Traefik deploy results
+  ansible.builtin.debug:
+    var: traefik_up
+    verbosity: 1

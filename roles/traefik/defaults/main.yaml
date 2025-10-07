@@ -1,0 +1,17 @@
+---
+traefik_compose_dir: "/opt/traefik"
+traefik_compose_file: "docker-compose.yaml"
+
+traefik_env_file: "{{ traefik_compose_dir }}/.env"
+traefik_data_dir: "{{ traefik_compose_dir }}/data"
+traefik_acme_file: "{{ traefik_data_dir }}/acme.json"
+traefik_acme_storage_path: "/letsencrypt/acme.json"
+traefik_image: "traefik:latest"
+traefik_container_name: "traefik"
+traefik_network_name: "traefik-net"
+traefik_log_level: "INFO"
+
+traefik_cert_resolver: "dnshetzner"
+traefik_dns_provider: "hetzner"
+traefik_acme_email: "{{ sops.proxy.acme_mail | default('you@example.com', true) }}"
+traefik_dashboard_url: "traefik.home.wbrck.de"

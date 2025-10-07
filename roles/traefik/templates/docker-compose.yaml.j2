@@ -1,0 +1,46 @@
+services:
+  traefik:
+    image: "{{ traefik_image }}"
+    container_name: "{{ traefik_container_name }}"
+    restart: unless-stopped
+    env_file:
+      - .env
+    command:
+      - --api.dashboard=true
+      - --log.level={{ traefik_log_level }}
+
+      # EntryPoints
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+
+      # Docker-Provider
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+
+      # ACME + DNS Challenge über den hinterlegten Provider
+      - --certificatesresolvers.{{ traefik_cert_resolver }}.acme.dnschallenge=true
+      - --certificatesresolvers.{{ traefik_cert_resolver }}.acme.dnschallenge.provider={{ traefik_dns_provider }}
+      - --certificatesresolvers.{{ traefik_cert_resolver }}.acme.email={{ traefik_acme_email }}
+      - --certificatesresolvers.{{ traefik_cert_resolver }}.acme.storage={{ traefik_acme_storage_path }}
+
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "{{ traefik_data_dir }}:/letsencrypt"
+    networks:
+      - "{{ traefik_network_name }}"
+    
+    labels:
+      # Dashboard erreichbar unter https://{{ traefik_dashboard_url }}
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`{{ traefik_dashboard_url }}`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver={{ traefik_cert_resolver }}"
+      - "traefik.http.routers.api.service=api@internal"
+
+networks:
+  default: 
+    name: {{ traefik_network_name }}
+    external: true

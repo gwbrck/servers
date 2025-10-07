@@ -3,3 +3,8 @@ vaultwarden_compose_dir: "/opt/vaultwarden"
 vaultwarden_compose_file: "docker-compose.yaml"
 vaultwarden_data_dir: "{{ vaultwarden_compose_dir }}/data"
 vaultwarden_internal_port: 8844
+vaultwarden_domain: "{{ sops.vaultwarden.domain | default('vaultwarden.home.wbrck.de', true) }}"
+vaultwarden_traefik_enable: true
+vaultwarden_traefik_router_name: "vaultwarden"
+vaultwarden_traefik_cert_resolver: "{{ traefik_cert_resolver }}"
+vaultwarden_traefik_network: "{{ traefik_network_name }}"
