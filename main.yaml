@@ -62,6 +62,12 @@
   roles:
     - vdirsyncer
 
+- name: Setup Traefik
+  hosts: pivpn
+  become: true
+  roles:
+    - traefik
+
 - name: Setup vaultwarden
   hosts: pivpn
   become: true

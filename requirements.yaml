@@ -3,6 +3,6 @@ roles:
   - name: geerlingguy.docker
 collections:
   - name: community.sops
+  - name: community.docker
   - name: artis3n.tailscale
-
 
