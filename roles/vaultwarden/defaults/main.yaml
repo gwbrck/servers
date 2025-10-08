@@ -5,5 +5,5 @@ vaultwarden_data_dir: "{{ vaultwarden_compose_dir }}/data"
 vaultwarden_public_url: "{{ sops.vaultwarden.domain }}"
 vaultwarden_traefik_enable: true
 vaultwarden_traefik_router_name: "vaultwarden"
-vaultwarden_traefik_cert_resolver: "{{ reverse_proxy_cert_resolver | default('dnshetzner') }}"
-vaultwarden_traefik_network: "{{ reverse_proxy_network_name | default('traefik-net') }}"
+vaultwarden_traefik_cert_resolver: "{{ sops.proxy.cert_resolver | default('dnshetzner', true) }}"
+vaultwarden_traefik_network: "{{ sops.proxy.network_name | default('traefik-net', true) }}"
