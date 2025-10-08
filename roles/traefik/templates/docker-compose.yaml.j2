@@ -20,9 +20,9 @@ services:
       # ACME + DNS Challenge über den hinterlegten Provider
       - --certificatesresolvers.{{ traefik_cert_resolver }}.acme.dnschallenge=true
       - --certificatesresolvers.{{ traefik_cert_resolver }}.acme.dnschallenge.provider={{ traefik_dns_provider }}
-      - --certificatesresolvers.{{ traefik_cert_resolver }}.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
+      # - --certificatesresolvers.{{ traefik_cert_resolver }}.acme.caServer=https://acme-staging-v02.api.letsencrypt.org/directory
       - --certificatesresolvers.{{ traefik_cert_resolver }}.acme.dnschallenge.resolvers={{ traefik_dns_resolvers | join(',') }}
-      - --certificatesresolvers.{{ traefik_cert_resolver }}.acme.dnschallenge.delayBeforeCheck=0
+      - --certificatesresolvers.{{ traefik_cert_resolver }}.acme.dnschallenge.propagation.delaybeforechecks=2
       - --certificatesresolvers.{{ traefik_cert_resolver }}.acme.email={{ traefik_acme_email }}
       - --certificatesresolvers.{{ traefik_cert_resolver }}.acme.storage={{ traefik_acme_storage_path }}
 
