@@ -13,5 +13,8 @@ traefik_log_level: "INFO"
 
 traefik_cert_resolver: "dnshetzner"
 traefik_dns_provider: "hetzner"
+traefik_dns_resolvers:
+  - "1.1.1.1:53"
+  - "8.8.8.8:53"
 traefik_acme_email: "{{ sops.proxy.acme_mail | default('you@example.com', true) }}"
 traefik_dashboard_url: "{{ sops.proxy.dashboard_url | default('example.com', true) }}"
