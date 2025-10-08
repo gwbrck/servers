@@ -3,15 +3,15 @@ status_path = "/var/lib/vdirsyncer/.vdirsyncer/status/"
 
 [storage tud]
 type = "caldav"
-url = "{{ vdirsyncer.tud.url }}"
-username = "{{ vdirsyncer.tud.username }}"
+url = "{{ sops.vdirsyncer.tud.url }}"
+username = "{{ sops.vdirsyncer.tud.username }}"
 password.fetch  = ["command", "printenv", "TUD_PASS"]
 read_only = true
 
 [storage icloud]
 type = "caldav"
-url = "{{ vdirsyncer.icloud.url }}"
-username = "{{ vdirsyncer.icloud.username }}"
+url = "{{ sops.vdirsyncer.icloud.url }}"
+username = "{{ sops.vdirsyncer.icloud.username }}"
 password.fetch  = ["command", "printenv", "ICLOUD_PASS"]
 
 [storage localclean]
@@ -22,11 +22,11 @@ fileext = ".ics"
 [pair tud_to_local]
 a = "tud"
 b = "localclean"
-collections = [["tud_to_local", "{{ vdirsyncer.tud.targetcal }}", "cleaned"]]
+collections = [["tud_to_local", "{{ sops.vdirsyncer.tud.targetcal }}", "cleaned"]]
 conflict_resolution = "a wins"
 
 [pair local_to_icloud]
 a = "localclean"
 b = "icloud"
-collections = [["local_to_icloud", "cleaned", "{{ vdirsyncer.icloud.targetcal }}"]]
+collections = [["local_to_icloud", "cleaned", "{{ sops.vdirsyncer.icloud.targetcal }}"]]
 conflict_resolution = "a wins"
