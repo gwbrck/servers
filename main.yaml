@@ -1,7 +1,26 @@
+- name: Load SOPS secrets
+  hosts: localhost
+  gather_facts: false
+  vars:
+    sops_file: "{{ lookup('env', 'HOME') }}/Documents/Dots/server_infra.yaml"
+  tasks:
+    - name: Read SOPS secrets
+      no_log: true
+      vars:
+        sops_raw: "{{ lookup('community.sops.sops', sops_file, errors='ignore') | from_yaml }}"
+      ansible.builtin.set_fact:
+        sops_data:
+          mydefaults: "{{ sops_raw.mydefaults | default({}, true) }}"
+          tailscale: "{{ sops_raw.tailscale | default({}, true) }}"
+          proxy: "{{ sops_raw.proxy | default({}, true) }}"
+          vaultwarden: "{{ sops_raw.vaultwarden | default({}, true) }}"
+          vdirsyncer: "{{ sops_raw.vdirsyncer | default({}, true) }}"
+
 - name: System Defaults
   hosts: all
   become: true
   vars:
+    sops: "{{ hostvars['localhost'].sops_data }}"
     security_sudoers_passwordless:
       - "{{ ansible_user }}"
     security_ssh_port: 6861
@@ -21,6 +40,8 @@
   hosts: pivpn
   become: true
   gather_facts: true
+  vars:
+    sops: "{{ hostvars['localhost'].sops_data }}"
   pre_tasks:
     - name: Ensure IP forwarding sysctl settings
       ansible.posix.sysctl:
@@ -54,17 +75,23 @@
 - name: Setup vdirsyncer
   hosts: pivpn
   become: true
+  vars:
+    sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
     - vdirsyncer
 
 - name: Setup Traefik
   hosts: pivpn
   become: true
+  vars:
+    sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
     - traefik
 
 - name: Setup vaultwarden
   hosts: pivpn
   become: true
+  vars:
+    sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
     - vaultwarden
