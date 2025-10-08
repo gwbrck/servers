@@ -28,14 +28,14 @@
     group: root
     mode: "0600"
 
+- name: Pull images
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ vaultwarden_compose_dir }}"
+
 - name: Create and start services
   community.docker.docker_compose_v2:
     project_src: "{{ vaultwarden_compose_dir }}"
   register: output
-
-- name: Pull images
-  community.docker.docker_compose_v2_pull:
-    project_src: "{{ vaultwarden_compose_dir }}"
 
 - name: Show results
   ansible.builtin.debug:
