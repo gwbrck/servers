@@ -8,10 +8,10 @@ traefik_acme_file: "{{ traefik_data_dir }}/acme.json"
 traefik_acme_storage_path: "/letsencrypt/acme.json"
 traefik_image: "traefik:latest"
 traefik_container_name: "traefik"
-traefik_network_name: "traefik-net"
+traefik_network_name: "{{ reverse_proxy_network_name | default('traefik-net') }}"
 traefik_log_level: "INFO"
 
-traefik_cert_resolver: "dnshetzner"
+traefik_cert_resolver: "{{ reverse_proxy_cert_resolver | default('dnshetzner') }}"
 traefik_dns_provider: "hetzner"
 traefik_dns_resolvers:
   - "1.1.1.1:53"

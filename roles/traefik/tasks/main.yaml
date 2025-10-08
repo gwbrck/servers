@@ -1,4 +1,14 @@
 ---
+- name: Validate Traefik secrets
+  ansible.builtin.assert:
+    that:
+      - (sops.proxy.hetzner_api_key | default('')) | length > 0
+      - traefik_acme_email is defined
+      - traefik_acme_email != 'you@example.com'
+      - traefik_dashboard_url is defined
+      - traefik_dashboard_url != 'example.com'
+    fail_msg: "Traefik secrets missing or using placeholder values; update SOPS data."
+
 - name: Ensure Traefik directories exist
   ansible.builtin.file:
     path: "{{ item }}"
@@ -30,7 +40,7 @@
 - name: Ensure ACME storage file exists
   ansible.builtin.file:
     path: "{{ traefik_acme_file }}"
-    state: touch
+    state: file
     owner: root
     group: root
     mode: "0600"
