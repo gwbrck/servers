@@ -37,7 +37,7 @@
     - role: artis3n.tailscale.machine
       vars:
         verbose: true
-        tailscale_authkey: "{{ tailscale_router_authkey }}"
+        tailscale_authkey: "{{ sops.tailscale.client_secret }}"
         tailscale_tags:
           - "server"
         tailscale_args: >-
