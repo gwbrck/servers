@@ -81,6 +81,7 @@
       "
     executable: /bin/bash
   register: proxmox_iso_build
+  no_log: true
   when: proxmox_container_runtime_info.rc == 0
 
 - name: Check for generated Proxmox ISO artifact
@@ -94,6 +95,7 @@
     msg:
       - "Container stdout:\n{{ proxmox_iso_build.stdout | default('<no stdout>', true) }}"
       - "Container stderr:\n{{ proxmox_iso_build.stderr | default('<no stderr>', true) }}"
+    no_log: true
   when:
     - proxmox_container_runtime_info.rc == 0
     - not proxmox_iso_artifact.stat.exists
@@ -107,10 +109,23 @@
     - proxmox_container_runtime_info.rc == 0
     - not proxmox_iso_artifact.stat.exists
 
+- name: Remove sensitive Proxmox build artifacts
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ autoin_proxmox_iso_workdir }}/answer.toml"
+    - "{{ autoin_proxmox_iso_workdir }}/postinstall.sh"
+    - "{{ autoin_proxmox_iso_workdir }}/build"
+  loop_control:
+    label: "{{ item | basename }}"
+  when:
+    - proxmox_container_runtime_info.rc == 0
+    - proxmox_iso_artifact.stat.exists
+
 - name: Show ISO build results summary
   ansible.builtin.debug:
     msg:
-      - "Generated ISO: {{ autoin_proxmox_iso_workdir }}/proxmox-auto-install.iso"
-      - "Answer file: {{ autoin_proxmox_iso_workdir }}/answer.toml"
-      - "Post-install script: {{ autoin_proxmox_iso_workdir }}/postinstall.sh"
+      - "Generated ISO kept at {{ autoin_proxmox_iso_workdir }}/proxmox-auto-install.iso"
+      - "Sensitive files (answer.toml, postinstall.sh, build/) removed from workspace"
     verbosity: 1
