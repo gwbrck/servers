@@ -13,7 +13,7 @@ autoin_proxmox_iso_container_repo: "http://download.proxmox.com/debian/pve trixi
 autoin_proxmox_iso_container_repo_key_url: "https://enterprise.proxmox.com/debian/proxmox-release-trixie.gpg"
 
 # Host identity and root access data.
-autoin_proxmox_fqdn: "zimapve.home.wbrck.de"
+autoin_proxmox_fqdn: "{{ sops.proxmox.fqdn }}"
 autoin_proxmox_root_password_hash: "{{ sops.mydefaults.password_hashed }}"
 autoin_proxmox_root_authorized_keys:
   - "{{ sops.mydefaults.public_ssh_key }}"
