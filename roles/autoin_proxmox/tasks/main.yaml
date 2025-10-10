@@ -1,0 +1,93 @@
+---
+- name: Validate required Proxmox ISO inputs
+  ansible.builtin.assert:
+    that:
+      - autoin_proxmox_iso_source_path is defined
+      - autoin_proxmox_iso_source_path | length > 0
+      - autoin_proxmox_root_password_hash | length > 0
+      - (autoin_proxmox_root_authorized_keys | reject('equalto', '') | list | length) > 0
+      - autoin_proxmox_admin_user | length > 0
+      - autoin_proxmox_admin_ssh_public_key | length > 0
+    fail_msg: >-
+      Missing required inputs for Proxmox auto-installer ISO. Ensure the base ISO path,
+      root password hash, root/admin SSH keys, and admin user values are defined
+      (ideally sourced via SOPS secrets).
+  no_log: true
+
+- name: Verify Proxmox base ISO exists
+  ansible.builtin.stat:
+    path: "{{ autoin_proxmox_iso_source_path }}"
+  register: proxmox_iso_source_stat
+
+- name: Abort when Proxmox base ISO is unavailable
+  ansible.builtin.fail:
+    msg: >-
+      Proxmox base ISO not found at {{ autoin_proxmox_iso_source_path }}. Download the official ISO
+      and update autoin_proxmox_iso_source_path accordingly.
+  when: not proxmox_iso_source_stat.stat.exists
+
+- name: Prepare Proxmox ISO workspace directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0750"
+  loop:
+    - "{{ autoin_proxmox_iso_workdir }}"
+    - "{{ autoin_proxmox_iso_workdir }}/build"
+
+- name: Render Proxmox auto-install answer file
+  ansible.builtin.template:
+    src: answer.toml.j2
+    dest: "{{ autoin_proxmox_iso_workdir }}/answer.toml"
+    mode: "0600"
+  no_log: true
+
+- name: Render Proxmox post-install script
+  ansible.builtin.template:
+    src: postinstall.sh.j2
+    dest: "{{ autoin_proxmox_iso_workdir }}/postinstall.sh"
+    mode: "0700"
+  no_log: true
+
+- name: Build Proxmox auto-install ISO via containerized assistant
+  community.docker.docker_container:
+    name: "proxmox-auto-install-builder"
+    image: "{{ autoin_proxmox_iso_container_image }}"
+    platform: "{{ autoin_proxmox_iso_container_platform }}"
+    command: >
+      /bin/bash -lc "
+        set -euo pipefail;
+        export DEBIAN_FRONTEND=noninteractive;
+        apt-get update;
+        apt-get install -y --no-install-recommends ca-certificates curl gnupg;
+        install -d -m 0755 /etc/apt/keyrings;
+        curl -fsSL {{ autoin_proxmox_iso_container_repo_key_url }} -o /etc/apt/keyrings/proxmox.gpg;
+        echo 'deb [signed-by=/etc/apt/keyrings/proxmox.gpg] {{ autoin_proxmox_iso_container_repo }}' > /etc/apt/sources.list.d/proxmox.list;
+        apt-get update;
+        apt-get install -y --no-install-recommends proxmox-auto-install-assistant xorriso squashfs-tools p7zip-full ca-certificates curl gnupg;
+        proxmox-auto-install-assistant validate-answer /workspace/answer.toml;
+        proxmox-auto-install-assistant prepare-iso
+          --source /iso/base.iso
+          --output /workspace/proxmox-auto-install.iso
+          --answer-file /workspace/answer.toml
+          --on-first-boot /workspace/postinstall.sh;
+          --force;
+      "
+    auto_remove: true
+    detach: false
+    recreate: false
+    workdir: /workspace
+    env: {}
+    volumes:
+      - "{{ autoin_proxmox_iso_workdir }}:/workspace"
+      - "{{ autoin_proxmox_iso_source_path }}:/iso/base.iso:ro"
+  register: proxmox_iso_build
+  no_log: true
+
+- name: Show ISO build results summary
+  ansible.builtin.debug:
+    msg:
+      - "Generated ISO: {{ autoin_proxmox_iso_workdir }}/proxmox-auto-install.iso"
+      - "Answer file: {{ autoin_proxmox_iso_workdir }}/answer.toml"
+      - "Post-install script: {{ autoin_proxmox_iso_workdir }}/postinstall.sh"
+  verbosity: 1

@@ -1,0 +1,30 @@
+## Managed by Ansible. Adjust variables instead of editing this file directly.
+
+[global]
+fqdn = "{{ autoin_proxmox_fqdn }}"
+timezone = "Europe/Berlin"
+keyboard = "de"
+country = "de"
+locale = "en_US.UTF-8"
+root-password-hashed = "{{ autoin_proxmox_root_password_hash }}"
+{% set filtered_root_keys = autoin_proxmox_root_authorized_keys | reject('equalto', '') | list %}
+{% if filtered_root_keys %}
+root-ssh-keys = [
+{% for key in filtered_root_keys %}
+  "{{ key }}"{% if not loop.last %},{% endif %}
+{% endfor %}
+]
+{% endif %}
+
+[network]
+source = "from-dhcp"
+filter = "name=eth1"
+
+[storage]
+disk-list = ["/dev/mmcblk0"]
+filesystem = "ext4"
+
+
+[first-boot]
+source = "from-iso"
+ordering = "fully-up"

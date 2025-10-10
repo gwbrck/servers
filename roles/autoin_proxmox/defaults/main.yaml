@@ -1,0 +1,25 @@
+---
+# Workspace where answer files, postinstall scripts, and ISO artifacts are created.
+autoin_proxmox_iso_workdir: "{{ playbook_dir | default(ansible_env.PWD) }}/artifacts/proxmox-auto-install"
+
+# Host path of the pristine Proxmox VE ISO. Override via group/host vars or env var.
+autoin_proxmox_iso_source_path: "{{ lookup('env', 'PROXMOX_BASE_ISO') | default(ansible_env.HOME ~ '/Downloads/proxmox-ve.iso', true) }}"
+
+# Container image and configuration used to run proxmox-auto-install-assistant.
+autoin_proxmox_iso_container_image: "debian:trixie"
+autoin_proxmox_iso_container_platform: "linux/amd64"
+
+# Proxmox repository configuration used inside the builder container.
+autoin_proxmox_iso_container_repo: "http://download.proxmox.com/debian/pve trixie pve-no-subscription"
+autoin_proxmox_iso_container_repo_key_url: "https://enterprise.proxmox.com/debian/proxmox-release-trixie.gpg"
+
+# Host identity and root access data.
+autoin_proxmox_fqdn: "zimapve.home.wbrck.de"
+autoin_proxmox_root_password_hash: "{{ sops.mydefaults.password_hash }}"
+autoin_proxmox_root_authorized_keys:
+  - "{{ sops.mydefaults.public_ssh_key }}"
+
+# Admin account provisioned in the post-install script.
+autoin_proxmox_admin_user: "{{ sops.mydefaults.username }}"
+autoin_proxmox_admin_password_hash: "{{ sops.mydefaults.password_hash }}"
+autoin_proxmox_admin_ssh_public_key: "{{ sops.mydefaults.public_ssh_key }}"

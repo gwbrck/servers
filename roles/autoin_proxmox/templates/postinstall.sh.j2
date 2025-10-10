@@ -1,0 +1,31 @@
+#!/bin/bash
+# Managed by Ansible. Creates an administrative user with SSH access after install.
+set -euo pipefail
+
+ADMIN_USER="{{ autoin_proxmox_admin_user }}"
+ADMIN_SHELL="/bin/bash"
+ADMIN_GROUPS="sudo"
+
+if ! id "${ADMIN_USER}" >/dev/null 2>&1; then
+  useradd --create-home --shell "${ADMIN_SHELL}" "${ADMIN_USER}"
+fi
+
+if [[ -n "${ADMIN_GROUPS}" ]]; then
+  IFS=',' read -ra GROUP_LIST <<< "${ADMIN_GROUPS}"
+  for GROUP in "${GROUP_LIST[@]}"; do
+    if [[ -n "${GROUP}" ]]; then
+      usermod -aG "${GROUP}" "${ADMIN_USER}"
+    fi
+  done
+fi
+
+{% if autoin_proxmox_admin_password_hash | default('') %}
+usermod --password '{{ autoin_proxmox_admin_password_hash }}' "${ADMIN_USER}"
+{% endif %}
+
+install -d -m 700 -o "${ADMIN_USER}" -g "${ADMIN_USER}" "/home/${ADMIN_USER}/.ssh"
+cat <<'EOF' > "/home/${ADMIN_USER}/.ssh/authorized_keys"
+{{ autoin_proxmox_admin_ssh_public_key | trim }}
+EOF
+chown "${ADMIN_USER}:${ADMIN_USER}" "/home/${ADMIN_USER}/.ssh/authorized_keys"
+chmod 600 "/home/${ADMIN_USER}/.ssh/authorized_keys"
