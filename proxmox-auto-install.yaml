@@ -11,6 +11,7 @@
       ansible.builtin.set_fact:
         sops_data:
           mydefaults: "{{ sops_raw.mydefaults | default({}, true) }}"
+          proxmox: "{{ sops_raw.proxmox | default({}, true) }}"
 
 - name: Build custom Proxmox VE auto-install ISO
   hosts: localhost
