@@ -5,7 +5,7 @@ fqdn = "{{ autoin_proxmox_fqdn }}"
 timezone = "Europe/Berlin"
 keyboard = "de"
 country = "de"
-locale = "en_US.UTF-8"
+mailto = "test@test.de"
 root-password-hashed = "{{ autoin_proxmox_root_password_hash }}"
 {% set filtered_root_keys = autoin_proxmox_root_authorized_keys | reject('equalto', '') | list %}
 {% if filtered_root_keys %}
@@ -18,9 +18,8 @@ root-ssh-keys = [
 
 [network]
 source = "from-dhcp"
-filter = "name=eth1"
 
-[storage]
+[disk-setup]
 disk-list = ["/dev/mmcblk0"]
 filesystem = "ext4"
 
