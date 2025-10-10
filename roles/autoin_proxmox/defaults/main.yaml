@@ -1,6 +1,6 @@
 ---
 # Workspace where answer files, postinstall scripts, and ISO artifacts are created.
-autoin_proxmox_iso_workdir: "{{ playbook_dir | default(ansible_env.PWD) }}/artifacts/proxmox-auto-install"
+autoin_proxmox_iso_workdir: "{{ lookup('env', 'PROXMOX_WORKDIR') | default(lookup('env', 'HOME') ~ '/Downloads/artifacts/proxmox-auto-install', true) }}"
 
 # Host path of the pristine Proxmox VE ISO. Override via group/host vars or env var.
 autoin_proxmox_iso_source_path: "{{ lookup('env', 'PROXMOX_BASE_ISO') | default(lookup('env', 'HOME') ~ '/Downloads/proxmox-ve.iso', true) }}"
