@@ -14,7 +14,6 @@
           tailscale: "{{ sops_raw.tailscale | default({}, true) }}"
           proxy: "{{ sops_raw.proxy | default({}, true) }}"
           vaultwarden: "{{ sops_raw.vaultwarden | default({}, true) }}"
-          vdirsyncer: "{{ sops_raw.vdirsyncer | default({}, true) }}"
 
 - name: System Defaults
   hosts: all
@@ -71,14 +70,6 @@
     - name: Reload sysctl
       ansible.builtin.command: sysctl -p
       changed_when: false
-
-- name: Setup vdirsyncer
-  hosts: pivpn
-  become: true
-  vars:
-    sops: "{{ hostvars['localhost'].sops_data }}"
-  roles:
-    - vdirsyncer
 
 - name: Setup Traefik
   hosts: pivpn
