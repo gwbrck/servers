@@ -20,8 +20,9 @@ root-ssh-keys = [
 source = "from-dhcp"
 
 [disk-setup]
-disk-list = ["/dev/mmcblk0"]
-filesystem = "ext4"
+filesystem = "zfs"
+zfs.raid = "raid1"
+filter.ID_MODEL = "Crucial*"
 
 
 [first-boot]
