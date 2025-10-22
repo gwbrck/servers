@@ -34,61 +34,54 @@
     mode: "0700"
   no_log: true
 
-- name: Check container runtime availability for ISO build
-  ansible.builtin.command:
-    cmd: "docker info"
-  register: proxmox_container_runtime_info
-  changed_when: false
-  failed_when: false
-
-- name: Abort when container runtime is unavailable
-  ansible.builtin.fail:
-    msg: >-
-      Container runtime 'docker' is unavailable or its daemon is not running.
-      Start the runtime service or set autoin_proxmox_iso_container_runtime to a working executable.
-      Underlying error: {{ proxmox_container_runtime_info.stderr | default('no stderr from runtime check') }}
-  when: proxmox_container_runtime_info.rc != 0
-
 - name: Build Proxmox auto-install ISO via containerized assistant
-  ansible.builtin.shell:
-    cmd: >
-      docker run --rm
-      --platform "{{ autoin_proxmox_iso_container_platform }}"
-      -v "{{ autoin_proxmox_iso_workdir }}:/workspace"
-      -v "{{ autoin_proxmox_iso_source_path }}:/iso/base.iso:ro"
-      -w /workspace
-      "{{ autoin_proxmox_iso_container_image }}"
-      /bin/bash -lc "
-        set -euxo pipefail;
-        ls -lah /iso;
-        test -f /iso/base.iso;
-        export DEBIAN_FRONTEND=noninteractive;
-        apt-get update;
-        apt-get install -y --no-install-recommends ca-certificates curl gnupg;
-        install -d -m 0755 /etc/apt/keyrings;
-        curl -fsSL {{ autoin_proxmox_iso_container_repo_key_url }} -o /etc/apt/keyrings/proxmox.gpg;
-        echo 'deb [signed-by=/etc/apt/keyrings/proxmox.gpg] {{ autoin_proxmox_iso_container_repo }}' > /etc/apt/sources.list.d/proxmox.list;
-        apt-get update;
-        apt-get install -y --no-install-recommends proxmox-auto-install-assistant xorriso squashfs-tools p7zip-full ca-certificates curl gnupg;
-        proxmox-auto-install-assistant validate-answer /workspace/answer.toml;
-        proxmox-auto-install-assistant prepare-iso \
-          --fetch-from iso \
-          --output /workspace/proxmox-auto-install.iso \
-          --answer-file /workspace/answer.toml \
-          --on-first-boot /workspace/postinstall.sh \
-          --tmp /workspace/build \
-          /iso/base.iso
-      "
-    executable: /bin/bash
+  community.docker.docker_container:
+    name: autoin-proxmox-iso-build
+    image: "{{ autoin_proxmox_iso_container_image }}"
+    pull: yes
+    recreate: yes
+    auto_remove: no
+    platform: "{{ autoin_proxmox_iso_container_platform }}"
+    working_dir: /workspace
+    volumes:
+      - "{{ autoin_proxmox_iso_workdir }}:/workspace"
+      - "{{ autoin_proxmox_iso_source_path }}:/iso/base.iso:ro"
+    command: >
+      /bin/bash -lc
+      "set -euxo pipefail;
+      ls -lah /iso;
+      test -f /iso/base.iso;
+      export DEBIAN_FRONTEND=noninteractive;
+      apt-get update;
+      apt-get install -y --no-install-recommends ca-certificates curl gnupg;
+      install -d -m 0755 /etc/apt/keyrings;
+      curl -fsSL {{ autoin_proxmox_iso_container_repo_key_url }} -o /etc/apt/keyrings/proxmox.gpg;
+      echo 'deb [signed-by=/etc/apt/keyrings/proxmox.gpg] {{ autoin_proxmox_iso_container_repo }}' > /etc/apt/sources.list.d/proxmox.list;
+      apt-get update;
+      apt-get install -y --no-install-recommends proxmox-auto-install-assistant xorriso squashfs-tools p7zip-full ca-certificates curl gnupg;
+      proxmox-auto-install-assistant validate-answer /workspace/answer.toml;
+      proxmox-auto-install-assistant prepare-iso \
+        --fetch-from iso \
+        --output /workspace/proxmox-auto-install.iso \
+        --answer-file /workspace/answer.toml \
+        --on-first-boot /workspace/postinstall.sh \
+        --tmp /workspace/build \
+        /iso/base.iso;"
+    tty: yes
+    detach: false
   register: proxmox_iso_build
   no_log: true
-  when: proxmox_container_runtime_info.rc == 0
+
+- name: Remove build container after result collection
+  community.docker.docker_container:
+    name: autoin-proxmox-iso-build
+    state: absent
+  when: proxmox_iso_build is not failed
 
 - name: Check for generated Proxmox ISO artifact
   ansible.builtin.stat:
     path: "{{ autoin_proxmox_iso_workdir }}/proxmox-auto-install.iso"
   register: proxmox_iso_artifact
-  when: proxmox_container_runtime_info.rc == 0
 
 - name: Show ISO build command output
   ansible.builtin.debug:
@@ -97,7 +90,6 @@
       - "Container stderr:\n{{ proxmox_iso_build.stderr | default('<no stderr>', true) }}"
     no_log: true
   when:
-    - proxmox_container_runtime_info.rc == 0
     - not proxmox_iso_artifact.stat.exists
 
 - name: Abort when Proxmox ISO artifact is missing
@@ -106,7 +98,6 @@
       Expected ISO at {{ autoin_proxmox_iso_workdir }}/proxmox-auto-install.iso but it was not created.
       Review the container output above for details.
   when:
-    - proxmox_container_runtime_info.rc == 0
     - not proxmox_iso_artifact.stat.exists
 
 - name: Remove sensitive Proxmox build artifacts
@@ -120,7 +111,6 @@
   loop_control:
     label: "{{ item | basename }}"
   when:
-    - proxmox_container_runtime_info.rc == 0
     - proxmox_iso_artifact.stat.exists
 
 - name: Show ISO build results summary
