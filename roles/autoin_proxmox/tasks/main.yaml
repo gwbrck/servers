@@ -38,9 +38,9 @@
   community.docker.docker_container:
     name: autoin-proxmox-iso-build
     image: "{{ autoin_proxmox_iso_container_image }}"
-    pull: yes
-    recreate: yes
-    auto_remove: no
+    pull: true
+    recreate: true
+    auto_remove: false
     platform: "{{ autoin_proxmox_iso_container_platform }}"
     working_dir: /workspace
     volumes:
@@ -67,7 +67,7 @@
         --on-first-boot /workspace/postinstall.sh \
         --tmp /workspace/build \
         /iso/base.iso;"
-    tty: yes
+    tty: true
     detach: false
   register: proxmox_iso_build
   no_log: true
