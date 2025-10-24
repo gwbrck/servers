@@ -22,7 +22,15 @@ source = "from-dhcp"
 [disk-setup]
 filesystem = "zfs"
 zfs.raid = "raid1"
-filter.ID_MODEL = "Crucial*"
+# filter.ID_MODEL = "CT240*"
+disk-list = ["sda", "sdb"]
+zfs.ashift = 12
+zfs.compress = "lz4"
+zfs.checksum = "on"
+zfs.copies = 1
+zfs.arc-max = 4096
+zfs.hdsize = 210
+
 
 
 [first-boot]
