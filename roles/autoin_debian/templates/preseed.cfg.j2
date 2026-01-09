@@ -1,0 +1,64 @@
+### Managed by Ansible. Adjust variables instead of editing this file directly.
+
+### Localization
+d-i debian-installer/locale string {{ autoin_debian_locale }}
+d-i console-setup/ask_detect boolean false
+d-i console-keymaps-at/keymap select {{ autoin_debian_keyboard }}
+d-i keyboard-configuration/xkb-keymap select {{ autoin_debian_keyboard }}
+d-i time/zone string {{ autoin_debian_timezone }}
+d-i clock-setup/utc boolean true
+d-i clock-setup/ntp boolean true
+
+### Network
+d-i netcfg/choose_interface select auto
+d-i netcfg/disable_autoconfig boolean false
+d-i netcfg/get_hostname string {{ autoin_debian_hostname }}
+
+
+### Mirror
+d-i mirror/country string manual
+d-i mirror/http/hostname string deb.debian.org
+d-i mirror/http/directory string /debian
+d-i mirror/http/proxy string
+
+### Users
+d-i passwd/root-login boolean true
+d-i passwd/root-password-crypted password {{ autoin_debian_root_password_hash }}
+d-i passwd/make-user boolean true
+d-i passwd/user-fullname string {{ autoin_debian_admin_user }}
+d-i passwd/username string {{ autoin_debian_admin_user }}
+d-i passwd/user-password-crypted password {{ autoin_debian_admin_password_hash }}
+
+### Disk layout: OS on mmcblk0, RAID handled in late_command for sda/sdb
+d-i partman/early_command string debconf-set partman/confirm_write_new_label true
+d-i partman/ignore_devices string /dev/sda|/dev/sdb
+d-i partman-auto/disk string /dev/mmcblk0
+d-i partman-auto/method string regular
+d-i partman-auto/choose_recipe select mmc-root
+d-i partman-auto/expert_recipe string \
+ mmc-root :: \
+  512 800 512 ext4 \
+   $primary{ } $bootable{ } method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ /boot } \
+  . \
+  1024 2048 4096 linux-swap \
+   $primary{ } method{ swap } format{ } \
+  . \
+  5000 10000 -1 ext4 \
+   method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ / } \
+  .
+d-i partman/confirm_write_new_label boolean true
+d-i partman/choose_partition select finish
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+### Package selection
+tasksel tasksel/first multiselect standard
+d-i pkgsel/include string openssh-server mdadm
+d-i pkgsel/upgrade select none
+popularity-contest popularity-contest/participate boolean false
+
+### Boot loader
+d-i grub-installer/bootdev string /dev/mmcblk0
+
+### Finish and automation
+d-i preseed/late_command string /cdrom/late_command.sh

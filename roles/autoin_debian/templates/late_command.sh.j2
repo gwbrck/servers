@@ -1,0 +1,44 @@
+#!/bin/bash
+# Managed by Ansible. Adds SSH keys and configures RAID1 for /srv.
+set -euxo pipefail
+
+ADMIN_USER="{{ autoin_debian_admin_user }}"
+RAID_MOUNTPOINT="{{ autoin_debian_raid_mountpoint }}"
+
+{% set root_keys = autoin_debian_root_authorized_keys | reject('equalto', '') | list %}
+{% if root_keys %}
+install -d -m 700 /target/root/.ssh
+cat <<'EOF' > /target/root/.ssh/authorized_keys
+{{ root_keys | join('\n') }}
+EOF
+chmod 600 /target/root/.ssh/authorized_keys
+chown root:root /target/root/.ssh/authorized_keys
+{% endif %}
+
+{% if autoin_debian_admin_ssh_public_key | default('', true) | trim %}
+install -d -m 700 /target/home/${ADMIN_USER}/.ssh
+cat <<'EOF' > /target/home/${ADMIN_USER}/.ssh/authorized_keys
+{{ autoin_debian_admin_ssh_public_key | trim }}
+EOF
+chown -R ${ADMIN_USER}:${ADMIN_USER} /target/home/${ADMIN_USER}/.ssh
+chmod 700 /target/home/${ADMIN_USER}/.ssh
+chmod 600 /target/home/${ADMIN_USER}/.ssh/authorized_keys
+{% endif %}
+
+if [ -n "${RAID_MOUNTPOINT}" ]; then
+  for disk in /dev/sda /dev/sdb; do
+    mdadm --zero-superblock --force "${disk}" || true
+    mdadm --zero-superblock --force "${disk}1" || true
+    parted -s "${disk}" mklabel gpt
+    parted -s "${disk}" mkpart primary 1MiB 100%
+    parted -s "${disk}" set 1 raid on
+  done
+
+  yes | mdadm --create /dev/md0 --level=1 --raid-devices=2 /dev/sda1 /dev/sdb1
+  mkfs.ext4 -F /dev/md0
+
+  mkdir -p "/target${RAID_MOUNTPOINT}"
+  echo "/dev/md0 ${RAID_MOUNTPOINT} ext4 defaults 0 0" >> /target/etc/fstab
+  mdadm --detail --scan >> /target/etc/mdadm/mdadm.conf
+  chroot /target update-initramfs -u
+fi
