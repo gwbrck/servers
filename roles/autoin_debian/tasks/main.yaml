@@ -1,0 +1,133 @@
+---
+- name: Verify Debian base ISO exists
+  ansible.builtin.stat:
+    path: "{{ autoin_debian_iso_source_path }}"
+  register: debian_iso_source_stat
+
+- name: Download Debian base ISO when missing
+  ansible.builtin.get_url:
+    url: "{{ autoin_debian_iso_url }}"
+    dest: "{{ autoin_debian_iso_source_path }}"
+    mode: "0644"
+  when: not debian_iso_source_stat.stat.exists
+
+- name: Prepare Debian ISO workspace directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0750"
+  loop:
+    - "{{ autoin_debian_iso_workdir }}"
+    - "{{ autoin_debian_iso_workdir }}/build"
+
+- name: Render Debian preseed file
+  ansible.builtin.template:
+    src: preseed.cfg.j2
+    dest: "{{ autoin_debian_iso_workdir }}/preseed.cfg"
+    mode: "0600"
+  no_log: true
+
+- name: Render Debian late_command script
+  ansible.builtin.template:
+    src: late_command.sh.j2
+    dest: "{{ autoin_debian_iso_workdir }}/late_command.sh"
+    mode: "0700"
+  no_log: true
+
+- name: Build Debian auto-install ISO via container
+  community.docker.docker_container:
+    name: autoin-debian-iso-build
+    image: "{{ autoin_debian_iso_container_image }}"
+    pull: true
+    recreate: true
+    auto_remove: false
+    platform: "{{ autoin_debian_iso_container_platform }}"
+    working_dir: /workspace
+    volumes:
+      - "{{ autoin_debian_iso_workdir }}:/workspace"
+      - "{{ autoin_debian_iso_source_path }}:/iso/base.iso:ro"
+    command: >-
+      /bin/bash -lc
+      "set -euxo pipefail;
+      ls -lah /iso;
+      test -f /iso/base.iso;
+      export DEBIAN_FRONTEND=noninteractive;
+      apt-get update;
+      apt-get install -y --no-install-recommends ca-certificates curl gnupg xorriso p7zip-full isolinux grub-pc-bin;
+      BUILD=/workspace/build;
+      EXTRACT=${BUILD}/extracted;
+      rm -rf \"${BUILD}\" && mkdir -p \"${EXTRACT}\";
+      7z x /iso/base.iso -o\"${EXTRACT}\";
+      cp /workspace/preseed.cfg \"${EXTRACT}/preseed.cfg\";
+      cp /workspace/late_command.sh \"${EXTRACT}/late_command.sh\";
+      KARGS=\"auto=true priority=critical preseed/file=/cdrom/preseed.cfg\";
+      if [ -f \"${EXTRACT}/isolinux/txt.cfg\" ]; then
+        sed -i \"s@append @append ${KARGS} @\" \"${EXTRACT}/isolinux/txt.cfg\";
+      fi;
+      if [ -f \"${EXTRACT}/boot/grub/grub.cfg\" ]; then
+        sed -i \"s@\\(linux\\s\\+/install.amd/vmlinuz[^ ]*\\)@\\1 ${KARGS}@\" \"${EXTRACT}/boot/grub/grub.cfg\";
+      fi;
+      if [ ! -f \"${EXTRACT}/isolinux/isohdpfx.bin\" ] && [ -f /usr/lib/ISOLINUX/isohdpfx.bin ]; then
+        cp /usr/lib/ISOLINUX/isohdpfx.bin \"${EXTRACT}/isolinux/\";
+      fi;
+      xorriso -as mkisofs \
+        -r -J -V 'DEBIAN_AUTOINSTALL' \
+        -o /workspace/debian-auto-install.iso \
+        -isohybrid-mbr \"${EXTRACT}/isolinux/isohdpfx.bin\" \
+        -c isolinux/boot.cat \
+        -b isolinux/isolinux.bin \
+          -no-emul-boot -boot-load-size 4 -boot-info-table \
+        -eltorito-alt-boot \
+        -e boot/grub/efi.img \
+          -no-emul-boot -isohybrid-gpt-basdat \
+        \"${EXTRACT}\";"
+    tty: true
+    detach: false
+  register: debian_iso_build
+  no_log: true
+
+- name: Remove build container after result collection
+  community.docker.docker_container:
+    name: autoin-debian-iso-build
+    state: absent
+  when: debian_iso_build is not failed
+
+- name: Check for generated Debian ISO artifact
+  ansible.builtin.stat:
+    path: "{{ autoin_debian_iso_workdir }}/debian-auto-install.iso"
+  register: debian_iso_artifact
+
+- name: Show ISO build command output when missing
+  ansible.builtin.debug:
+    msg:
+      - "Container stdout:\n{{ debian_iso_build.stdout | default('<no stdout>', true) }}"
+      - "Container stderr:\n{{ debian_iso_build.stderr | default('<no stderr>', true) }}"
+    no_log: true
+  when:
+    - not debian_iso_artifact.stat.exists
+
+- name: Remove sensitive Debian build artifacts
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ autoin_debian_iso_workdir }}/preseed.cfg"
+    - "{{ autoin_debian_iso_workdir }}/late_command.sh"
+    - "{{ autoin_debian_iso_workdir }}/build"
+  loop_control:
+    label: "{{ item | basename }}"
+
+- name: Abort when Debian ISO artifact is missing
+  ansible.builtin.fail:
+    msg: >-
+      Expected ISO at {{ autoin_debian_iso_workdir }}/debian-auto-install.iso but it was not created.
+      Review the container output above for details.
+  when:
+    - not debian_iso_artifact.stat.exists
+
+- name: Show Debian ISO build results summary
+  ansible.builtin.debug:
+    msg:
+      - "Generated ISO kept at {{ autoin_debian_iso_workdir }}/debian-auto-install.iso"
+      - "Sensitive files (preseed.cfg, late_command.sh, build/) removed from workspace"
+    verbosity: 1
