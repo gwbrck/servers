@@ -30,26 +30,33 @@ d-i passwd/username string {{ autoin_debian_admin_user }}
 d-i passwd/user-password-crypted password {{ autoin_debian_admin_password_hash }}
 
 ### Disk layout: OS on mmcblk0, RAID handled in late_command for sda/sdb
-d-i partman/early_command string debconf-set partman/confirm_write_new_label true
-d-i partman/ignore_devices string /dev/sda|/dev/sdb
+d-i partman/early_command string \
+    debconf-set partman-auto/disk "/dev/mmcblk0"; \
+    debconf-set grub-installer/bootdev "/dev/mmcblk0"; \
+    umount /media || true;
+
 d-i partman-auto/disk string /dev/mmcblk0
+d-i partman-lvm/device_remove_lvm boolean true
+d-i partman-md/device_remove_md boolean true
+d-i partman-lvm/confirm boolean true
+d-i partman-lvm/confirm_nooverwrite boolean true
+
 d-i partman-auto/method string regular
-d-i partman-auto/choose_recipe select mmc-root
-d-i partman-auto/expert_recipe string \
- mmc-root :: \
-  512 800 512 ext4 \
-   $primary{ } $bootable{ } method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ /boot } \
-  . \
-  1024 2048 4096 linux-swap \
-   $primary{ } method{ swap } format{ } \
-  . \
-  5000 10000 -1 ext4 \
-   method{ format } format{ } use_filesystem{ } filesystem{ ext4 } mountpoint{ / } \
-  .
-d-i partman/confirm_write_new_label boolean true
+
+
+# Partitionierungsschema (hier: alles in eine Partition - anpassen nach Wunsch)
+d-i partman-auto/choose_recipe select atomic
+
+# Partitionierung ohne Bestätigung schreiben
+d-i partman-partitioning/confirm_write_new_label boolean true
 d-i partman/choose_partition select finish
 d-i partman/confirm boolean true
 d-i partman/confirm_nooverwrite boolean true
+
+### Bootloader Installation
+# GRUB explizit auf mmcblk0 installieren
+d-i grub-installer/only_debian boolean true
+d-i grub-installer/bootdev string /dev/mmcblk0
 
 ### Package selection
 tasksel tasksel/first multiselect standard
@@ -57,8 +64,6 @@ d-i pkgsel/include string openssh-server mdadm
 d-i pkgsel/upgrade select none
 popularity-contest popularity-contest/participate boolean false
 
-### Boot loader
-d-i grub-installer/bootdev string /dev/mmcblk0
 
 ### Finish and automation
-d-i preseed/late_command string /cdrom/late_command.sh
+d-i preseed/late_command string cp /cdrom/late_command.sh /target/root/late_command.sh; in-target chmod +x /root/late_command.sh; in-target /root/late_command.sh

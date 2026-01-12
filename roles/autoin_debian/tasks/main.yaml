@@ -27,11 +27,11 @@
     mode: "0600"
   no_log: true
 
-- name: Render Debian late_command script
+- name: Render Debian late command script
   ansible.builtin.template:
     src: late_command.sh.j2
     dest: "{{ autoin_debian_iso_workdir }}/late_command.sh"
-    mode: "0700"
+    mode: "0600"
   no_log: true
 
 - name: Build Debian auto-install ISO via container
