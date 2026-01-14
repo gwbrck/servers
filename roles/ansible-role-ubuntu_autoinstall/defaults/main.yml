@@ -20,7 +20,7 @@ ssh_public_key: "{{ sops.mydefaults.public_ssh_key | default('', true) }}"
 
 target_dir: "{{ ansible_facts['env']['HOME'] }}/.local/ansible_ubuntu-autoinstall"
 
-ubuntu_gpg_key: 843938DF228D22F7B3742BC0D94AA3F0EFE21092
+ubuntu_gpg_key: "843938DF228D22F7B3742BC0D94AA3F0EFE21092"
 
 # Storage-Konfiguration
 ubuntu_auto_install_storage:
