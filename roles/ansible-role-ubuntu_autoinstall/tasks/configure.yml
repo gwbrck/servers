@@ -1,0 +1,24 @@
+---
+- name: Install dependencies
+  become: yes
+  package:
+    name:
+      - xorriso
+      - gpg
+      - curl
+    state: present
+  when: ansible_os_family != "Darwin"
+
+- name: Install dependencies (macOS)
+  package:
+    name:
+      - xorriso
+      - gnupg
+      - curl
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Create the temporary directory
+  file:
+    path: "{{ target_dir }}"
+    state: directory

@@ -1,0 +1,127 @@
+---
+- name: Create the extraction directory
+  file:
+    path: "{{ target_dir }}/iso"
+    state: directory
+
+- name: Extract the ISO
+  shell:
+    cmd: "xorriso -osirrox on -indev {{ target_dir }}/focal-live-server-{{ iso_arch }}.iso -extract / {{ target_dir }}/iso"
+
+- name: Fix extracted ISO mode
+  file:
+    path: "{{ target_dir }}/iso"
+    mode: "u+w"
+    recurse: yes
+    follow: no
+
+- name: Delete the [BOOT] folder
+  file:
+    path: "{{ target_dir }}/iso/[BOOT]"
+    state: absent
+
+- name: Enable HWE kernel in ISOLinux bootloader
+  replace:
+    path: "{{ item }}"
+    regexp: '/casper/(vmlinuz|initrd)'
+    replace: '/casper/hwe-\1'
+  with_items:
+    - "{{ target_dir }}/iso/isolinux/txt.cfg"
+  when: iso_arch == 'amd64' and enable_hwe_kernel | default(False)
+
+- name: Enable HWE kernel in GRUB bootloader
+  replace:
+    path: "{{ item }}"
+    regexp: '/casper/(vmlinuz|initrd)'
+    replace: '/casper/hwe-\1'
+  with_items:
+    - "{{ target_dir }}/iso/boot/grub/grub.cfg"
+    - "{{ target_dir }}/iso/boot/grub/loopback.cfg"
+  when: enable_hwe_kernel | default(False)
+
+- name: Add the autoinstall parameter to the ISOLinux bootloader
+  replace:
+    path: "{{ item }}"
+    regexp: "---$"
+    replace: " autoinstall   ds=nocloud;s=/cdrom/nocloud/  ---"
+  with_items:
+    - "{{ target_dir }}/iso/isolinux/txt.cfg"
+  when: iso_arch == 'amd64'
+
+- name: Add the autoinstall parameter to the GRUB bootloader
+  replace:
+    path: "{{ item }}"
+    regexp: "---$"
+    replace: " autoinstall   ds=nocloud\\;s=/cdrom/nocloud/  ---"
+  with_items:
+    - "{{ target_dir }}/iso/boot/grub/grub.cfg"
+    - "{{ target_dir }}/iso/boot/grub/loopback.cfg"
+
+- name: Create the nocloud directory
+  file:
+    path: "{{ target_dir }}/iso/nocloud"
+    state: directory
+
+- name: Generate and install the user-data file
+  template:
+    src: user-data.j2
+    dest: "{{ target_dir }}/iso/nocloud/user-data"
+
+- name: Create an empty meta-data file
+  file:
+    path: "{{ target_dir }}/iso/nocloud/meta-data"
+    state: touch
+    modification_time: preserve
+    access_time: preserve
+
+- name: Calculate the new MD5 hashes
+  stat:
+    path: "{{ item }}"
+    checksum_algorithm: md5
+  with_items:
+    - "{{ target_dir }}/iso/boot/grub/grub.cfg"
+    - "{{ target_dir }}/iso/boot/grub/loopback.cfg"
+    - "{{ target_dir }}/iso/isolinux/txt.cfg"
+  register: md5sums
+
+- name: Write the new MD5 hash (grub.cfg)
+  lineinfile:
+    line: "{{ md5sums.results[0].stat.checksum }}  ./boot/grub/grub.cfg"
+    search_string: /boot/grub/grub.cfg
+    path: "{{ target_dir }}/iso/md5sum.txt"
+
+- name: Write the new MD5 hash (loopback.cfg)
+  lineinfile:
+    line: "{{ md5sums.results[1].stat.checksum }}  ./boot/grub/loopback.cfg"
+    search_string: loopback.cfg
+    path: "{{ target_dir }}/iso/md5sum.txt"
+
+- name: Write the new MD5 hash (isolinux/txt.cfg)
+  lineinfile:
+    line: "{{ md5sums.results[2].stat.checksum }}  ./isolinux/txt.cfg"
+    search_string: isolinux/txt.cfg
+    path: "{{ target_dir }}/iso/md5sum.txt"
+  when: iso_arch == 'amd64'
+
+- name: Repack the ISO (amd64)
+  shell:
+    cmd: "cd {{ target_dir }}/iso && xorriso -as mkisofs -quiet -D -r -V ubuntu-autoinstall_{{ iso_arch }} -cache-inodes -J -l -joliet-long -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -eltorito-alt-boot -e boot/grub/efi.img -no-emul-boot -o {{ target_dir }}/ubuntu_autoinstall_{{ iso_arch }}.iso ."
+  when: iso_arch == 'amd64'
+
+
+- name: Repack the ISO (arm64)
+  shell:
+    cmd: "cd {{ target_dir }}/iso && xorriso -as mkisofs -quiet -D -r -V ubuntu-autoinstall_{{ iso_arch }} -cache-inodes -J -joliet-long -no-emul-boot -e boot/grub/efi.img -partition_cyl_align all -append_partition 2 0xef boot/grub/efi.img -no-emul-boot -o {{ target_dir }}/ubuntu_autoinstall_{{ iso_arch }}.iso ."
+  when: iso_arch == 'arm64'
+
+
+- name: Clean up
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ target_dir }}/iso"
+
+- name: Done!
+  debug:
+    msg: "Done! The ISO file has been generated: {{target_dir}}/ubuntu_autoinstall_{{ iso_arch }}.iso"
