@@ -14,54 +14,92 @@ autoinstall:
 
   # 3. Speicher (OS auf mmcblk0, Daten-RAID auf sda/sdb)
   storage:
+    swap:
+      size: 0
     config:
-      # --- A. Das Betriebssystem (eMMC) ---
-      - {type: disk, id: disk-os, path: /dev/mmcblk0, ptable: gpt, preserve: false, name: ''}
-      
-      # Boot Partitionen für OS
-      - {type: partition, id: part-bios, device: disk-os, size: 1M, flag: bios_grub}
-      - {type: partition, id: part-efi, device: disk-os, size: 512M, flag: boot}
-      - {type: format, id: fmt-efi, volume: part-efi, fstype: fat32}
-      - {type: mount, id: mount-efi, device: fmt-efi, path: /boot/efi}
-      
-      # Root Partition (Rest der eMMC für Ubuntu)
-      - {type: partition, id: part-root, device: disk-os, size: -1}
-      - {type: format, id: fmt-root, volume: part-root, fstype: ext4}
-      - {type: mount, id: mount-root, device: fmt-root, path: /}
+      # OS-Disk: /dev/mmcblk0
+      - type: disk
+        id: os-disk
+        match:
+          path: /dev/mmcblk0
 
-      # --- B. Das Daten-RAID (SATA/HDD) ---
-      - {type: disk, id: disk-sda, path: /dev/sda, ptable: gpt, preserve: false}
-      - {type: disk, id: disk-sdb, path: /dev/sdb, ptable: gpt, preserve: false}
-      
-      # Wir nutzen jeweils die komplette Festplatte für das RAID
-      - {type: partition, id: part-raid-a, device: disk-sda, size: -1}
-      - {type: partition, id: part-raid-b, device: disk-sdb, size: -1}
-      
-      # Erstellen des RAID1 (mdadm)
+      # EFI System Partition auf mmc
+      - type: partition
+        id: os-efi-part
+        device: os-disk
+        size: 512M
+        flag: boot
+
+      - type: format
+        id: os-efi-fs
+        volume: os-efi-part
+        fstype: fat32
+
+      - type: mount
+        id: mount-efi
+        device: os-efi-fs
+        path: /boot/efi
+
+      # Root auf dem Rest der mmc
+      - type: partition
+        id: os-root-part
+        device: os-disk
+        size: -1
+
+      - type: format
+        id: os-root-fs
+        volume: os-root-part
+        fstype: ext4
+
+      - type: mount
+        id: mount-root
+        device: os-root-fs
+        path: /
+
+      # RAID1 aus /dev/sda und /dev/sdb -> /srv
+      - type: disk
+        id: raid-disk-a
+        match:
+          path: /dev/sda
+
+      - type: disk
+        id: raid-disk-b
+        match:
+          path: /dev/sdb
+
+      - type: partition
+        id: raid-part-a
+        device: raid-disk-a
+        size: -1
+
+      - type: partition
+        id: raid-part-b
+        device: raid-disk-b
+        size: -1
+
       - type: raid
-        id: raid-data
+        id: md-srv
         name: md0
         raidlevel: 1
-        devices: [part-raid-a, part-raid-b]
-        spare_devices: []
-      
-      # Formatieren als ext4 (Robust & Standard)
-      - {type: format, id: fmt-data, volume: raid-data, fstype: ext4, label: DataRAID}
-      
-      # Mounten nach /srv
-      - {type: mount, id: mount-data, device: fmt-data, path: /srv}
+        devices:
+          - raid-part-a
+          - raid-part-b
+
+      - type: format
+        id: srv-fs
+        volume: md-srv
+        fstype: ext4
+
+      - type: mount
+        id: mount-srv
+        device: srv-fs
+        path: /srv
+
+
 
   # 4. SSH Zugang
   ssh:
     install-server: true
     allow-pw: false
-
-  # 5. User Konfiguration
-  users:
-    - name: "{{ username }}"
-      groups: [sudo, adm]
-      shell: /bin/bash
-      lock_passwd: false
-      passwd: "{{ password_hash }}"
-      ssh_authorized_keys:
-        - "{{ ssh_public_key }}"
+    authorized-keys:
+      - "{{ ssh_public_key }}"
