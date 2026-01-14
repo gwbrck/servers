@@ -1,13 +1,14 @@
 ---
 - name: Install dependencies
-  become: yes
+  become: true
   package:
     name:
       - xorriso
       - gpg
       - curl
     state: present
-  when: ansible_os_family != "Darwin"
+  # FIX: Use dictionary syntax
+  when: ansible_facts['os_family'] != "Darwin"
 
 - name: Install dependencies (macOS)
   package:
@@ -16,7 +17,8 @@
       - gnupg
       - curl
     state: present
-  when: ansible_os_family == "Darwin"
+  # FIX: Use dictionary syntax
+  when: ansible_facts['os_family'] == "Darwin"
 
 - name: Create the temporary directory
   file:

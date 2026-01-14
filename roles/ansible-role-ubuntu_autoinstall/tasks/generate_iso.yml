@@ -1,3 +1,8 @@
+-   name: Ensure output ISO is absent (cleanup before build)
+    file:
+      path: "{{ target_dir }}/ubuntu_autoinstall_{{ iso_arch }}.iso"
+      state: absent
+
 -   name: Prepare work dir
     file:
       path: "{{ target_dir }}/work"
