@@ -13,7 +13,8 @@ autoinstall:
   timezone: "{{ timezone }}"
 
   # 3. Speicher (Externalisiert in ubuntu_auto_install_storage)
-  storage: "{{ ubuntu_auto_install_storage }}"
+  storage: 
+{{ ubuntu_auto_install_storage | to_nice_yaml(indent=2, sort_keys=False) | indent(4, true) }}
 
 
 
