@@ -20,7 +20,6 @@
         -indev {{ target_dir }}/noble-live-server-{{ iso_arch }}.iso
         -outdev {{ target_dir }}/ubuntu_autoinstall_{{ iso_arch }}.iso
         -boot_image any replay
-        -volid "ubuntu-autoinstall_{{ iso_arch }}"
         -map {{ target_dir }}/work/autoinstall.yaml /autoinstall.yaml
 
 -   name: Delete work dir
