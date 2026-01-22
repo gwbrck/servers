@@ -29,8 +29,8 @@ ubuntu_auto_install_storage:
       type: disk
       ptable: gpt
       path: /dev/mmcblk0
-      serial: "0xa6ae2969"
       wipe: superblock-recursive
+      preserve: false
       grub_device: true
 
     - id: mmc0p1
