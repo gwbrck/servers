@@ -66,3 +66,48 @@ ubuntu_auto_install_storage:
       type: mount
       path: /
       device: fmt-root
+
+    # SSDs für RAID1 (/srv)
+    - id: sda
+      type: disk
+      ptable: gpt
+      path: /dev/sda
+      wipe: superblock-recursive
+      preserve: false
+
+    - id: sdb
+      type: disk
+      ptable: gpt
+      path: /dev/sdb
+      wipe: superblock-recursive
+      preserve: false
+
+    - id: sda1
+      type: partition
+      device: sda
+      number: 1
+      size: -1
+      preserve: false
+
+    - id: sdb1
+      type: partition
+      device: sdb
+      number: 1
+      size: -1
+      preserve: false
+
+    - id: md-srv
+      type: raid
+      name: md0
+      raidlevel: raid1
+      devices: [sda1, sdb1]
+
+    - id: fmt-srv
+      type: format
+      volume: md-srv
+      fstype: ext4
+
+    - id: mnt-srv
+      type: mount
+      path: /srv
+      device: fmt-srv
