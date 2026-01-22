@@ -24,13 +24,12 @@ ubuntu_gpg_key: "843938DF228D22F7B3742BC0D94AA3F0EFE21092"
 
 # Storage-Konfiguration
 ubuntu_auto_install_storage:
-  version: 2
   config:
     - id: mmc0
       type: disk
       ptable: gpt
       path: /dev/mmcblk0
-      serial: 0xa6ae2969
+      serial: "0xa6ae2969"
       wipe: superblock-recursive
       grub_device: true
 
@@ -40,6 +39,7 @@ ubuntu_auto_install_storage:
       number: 1
       size: 1G
       flag: boot
+      grub_device: true
 
     - id: mmc0p2
       type: partition
