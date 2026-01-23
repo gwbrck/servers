@@ -36,8 +36,10 @@
     - mydefaults
     - geerlingguy.docker
 
-- name: PiVPN
-  hosts: pivpn
+- name: Tailscale
+  hosts:
+    - pivpn
+    - homeeins
   become: true
   gather_facts: true
   vars:
