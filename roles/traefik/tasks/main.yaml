@@ -37,14 +37,14 @@
   no_log: true
   become: true
 
-- name: Ensure ACME storage file exists
-  ansible.builtin.file:
-    path: "{{ traefik_acme_file }}"
-    state: file
-    owner: root
-    group: root
-    mode: "0600"
-  become: true
+# - name: Ensure ACME storage file exists
+#   ansible.builtin.file:
+#     path: "{{ traefik_acme_file }}"
+#     state: file
+#     owner: root
+#     group: root
+#     mode: "0600"
+#   become: true
 
 - name: Deploy Traefik Docker Compose file
   ansible.builtin.template:

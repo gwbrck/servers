@@ -75,7 +75,7 @@
       changed_when: false
 
 - name: Setup Traefik
-  hosts: pivpn
+  hosts: homeeins
   become: true
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
@@ -83,9 +83,11 @@
     - traefik
 
 - name: Setup vaultwarden
-  hosts: pivpn
+  hosts: homeeins
   become: true
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
+    vaultwarden_compose_dir: "/opt/vaultwarden"
+    vaultwarden_data_dir: "/srv/service_data/vw"
   roles:
     - vaultwarden
