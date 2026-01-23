@@ -18,10 +18,11 @@
 - name: System Defaults
   hosts: all
   become: true
+  gather_facts: true
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
     security_sudoers_passwordless:
-      - "{{ ansible_user }}"
+      - "{{ ansible_facts.user_id }}"
     security_ssh_port: 6861
     security_ssh_password_authentication: "no"
     security_ssh_permit_root_login: "no"
@@ -62,7 +63,7 @@
           - "server"
         tailscale_args: >-
           --advertise-exit-node
-          --advertise-routes={{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.prefix }}
+          --advertise-routes={{ ansible_facts.default_ipv4.network }}/{{ ansible_facts.default_ipv4.prefix }}
         tailscale_oauth_ephemeral: false
         tailscale_oauth_preauthorized: false
 
