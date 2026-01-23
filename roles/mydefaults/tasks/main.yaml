@@ -24,8 +24,8 @@
 
 - name: "Lock the password for the current remote user"
   ansible.builtin.user:
-    name: "{{ ansible_user }}"
+    name: "{{ ansible_facts.user_id }}"
     state: present
     password: "{{ sops.mydefaults.password_hashed | default('', true) }}"
     password_lock: true
-  when: ansible_user != 'root'
+  when: ansible_facts.user_id != 'root'
