@@ -2,3 +2,5 @@ all:
   hosts:
     pivpn:
       ansible_user: gwbrck
+    homeeins:
+      ansible_user: gwbrck
