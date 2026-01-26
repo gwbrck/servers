@@ -91,3 +91,11 @@
     vaultwarden_data_dir: "/srv/service_data/vw"
   roles:
     - vaultwarden
+
+- name: Setup audiobookshelf
+  hosts: homeeins
+  become: true
+  vars:
+    sops: "{{ hostvars['localhost'].sops_data }}"
+  roles:
+    - audiobookshelf

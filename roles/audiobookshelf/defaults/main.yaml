@@ -1,0 +1,18 @@
+---
+# Pfade auf dem Host-System
+audiobookshelf_compose_dir: "/opt/audiobookshelf"
+audiobookshelf_compose_file: "docker-compose.yaml"
+audiobookshelf_audiobooks_dir: "/srv/service_data/audiobookshelf/audiobooks"
+audiobookshelf_podcasts_dir: "/srv/service_data/audiobookshelf/podcasts"
+audiobookshelf_config_dir: "/srv/service_data/audiobookshelf/config"
+audiobookshelf_metadata_dir: "/srv/service_data/audiobookshelf/metadata"
+
+# Zeitzone
+audiobookshelf_timezone: "Europe/Berlin"
+
+# Traefik / Netzwerk Einstellungen
+audiobookshelf_public_url: "audio.home.wbrck.de"
+audiobookshelf_traefik_enable: true
+audiobookshelf_traefik_network: "{{ sops.proxy.network_name | default('traefik-net', true) }}"
+audiobookshelf_traefik_router_name: "audiobookshelf"
+audiobookshelf_traefik_cert_resolver: "{{ sops.proxy.cert_resolver | default('dnshetzner', true) }}"
