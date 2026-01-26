@@ -1,0 +1,37 @@
+---
+- name: Ensure Audiobookshelf directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  become: true
+  loop:
+    - "{{ audiobookshelf_compose_dir }}"
+    - "{{ audiobookshelf_audiobooks_dir }}"
+    - "{{ audiobookshelf_podcasts_dir }}"
+    - "{{ audiobookshelf_config_dir }}"
+    - "{{ audiobookshelf_metadata_dir }}"
+
+- name: Deploy Audiobookshelf Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ audiobookshelf_compose_dir }}/{{ audiobookshelf_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Pull images
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ audiobookshelf_compose_dir }}"
+
+- name: Create and start services
+  community.docker.docker_compose_v2:
+    project_src: "{{ audiobookshelf_compose_dir }}"
+  register: output
+
+- name: Show results
+  ansible.builtin.debug:
+    var: output
+    verbosity: 1

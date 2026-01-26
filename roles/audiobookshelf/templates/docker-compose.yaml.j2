@@ -1,0 +1,27 @@
+services:
+  audiobookshelf:
+    image: ghcr.io/advplyr/audiobookshelf:latest
+    container_name: "audiobookshelf"
+    restart: unless-stopped
+    environment:
+      - TZ={{ audiobookshelf_timezone | default('Europe/Berlin') }}
+
+    volumes:
+      - "{{ audiobookshelf_audiobooks_dir }}:/audiobooks"
+      - "{{ audiobookshelf_podcasts_dir }}:/podcasts"
+      - "{{ audiobookshelf_config_dir }}:/config"
+      - "{{ audiobookshelf_metadata_dir }}:/metadata"
+    labels:
+      - "traefik.enable={{ audiobookshelf_traefik_enable | default(true) | ternary('true', 'false') }}"
+      - "traefik.docker.network={{ audiobookshelf_traefik_network }}"
+      - "traefik.http.routers.{{ audiobookshelf_traefik_router_name }}.rule=Host(`{{ audiobookshelf_public_url }}`)"
+      - "traefik.http.routers.{{ audiobookshelf_traefik_router_name }}.entrypoints=websecure"
+      - "traefik.http.routers.{{ audiobookshelf_traefik_router_name }}.tls.certresolver={{ audiobookshelf_traefik_cert_resolver }}"
+      - "traefik.http.services.{{ audiobookshelf_traefik_router_name }}.loadbalancer.server.port=80"
+    networks:
+      - "{{ audiobookshelf_traefik_network }}"
+
+networks:
+  {{ audiobookshelf_traefik_network }}:
+    name: {{ audiobookshelf_traefik_network }}
+    external: true
