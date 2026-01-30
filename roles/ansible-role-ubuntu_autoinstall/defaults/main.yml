@@ -28,7 +28,8 @@ ubuntu_auto_install_storage:
     - id: mmc0
       type: disk
       ptable: gpt
-      path: /dev/mmcblk0
+      match:
+        model: "*CT240*"
       wipe: superblock-recursive
       preserve: false
       grub_device: true
@@ -67,47 +68,28 @@ ubuntu_auto_install_storage:
       path: /
       device: fmt-root
 
-    # SSDs für RAID1 (/srv)
-    - id: sda
-      type: disk
-      ptable: gpt
-      path: /dev/sda
-      wipe: superblock-recursive
-      preserve: false
+    - type: disk
+      id: data-disk
+      match:
+        model: "*P220*"
+      preserve: true
+      wipe: false
 
-    - id: sdb
-      type: disk
-      ptable: gpt
-      path: /dev/sdb
-      wipe: superblock-recursive
-      preserve: false
-
-    - id: sda1
-      type: partition
-      device: sda
+      # Wir greifen uns die existierende Partition (Annahme: Partition 1)
+    - type: partition
+      id: data-part
+      device: data-disk
       number: 1
-      size: -1
-      preserve: false
+      preserve: true
 
-    - id: sdb1
-      type: partition
-      device: sdb
-      number: 1
-      size: -1
-      preserve: false
-
-    - id: md-srv
-      type: raid
-      name: md0
-      raidlevel: raid1
-      devices: [sda1, sdb1]
-
-    - id: fmt-srv
-      type: format
-      volume: md-srv
+    - type: format
+      id: data-format
+      volume: data-part
       fstype: ext4
+      preserve: true
 
-    - id: mnt-srv
-      type: mount
+      # Optional: Direkt irgendwo einhängen
+    - type: mount
+      id: mount-data
+      device: data-format
       path: /srv
-      device: fmt-srv
