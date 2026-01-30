@@ -1,0 +1,56 @@
+version: 1
+global:
+  restic-binary: "/usr/local/bin/restic"
+  scheduler: "systemd"
+
+
+default:
+  repository: "s3:https://{{ restic_s3_endpoint }}/{{ restic_s3_bucket }}"
+  initialize: true
+  env-file: "{{ resticprofile_env_file }}"
+  retention:
+    keep-daily: 7
+    keep-weekly: 4
+    keep-monthly: 6
+
+vaultwarden:
+  inherit: default
+  run-before:
+    - "docker compose -f /opt/vaultwarden/docker-compose.yaml exec -T vaultwarden /vaultwarden backup"
+    - >-
+      /bin/sh -c 'latest=$(ls -t /srv/service_data/vw/db_[0-9]*.sqlite3 2>/dev/null | head -n 1);
+      if [ -n "$latest" ]; then rm -f /srv/service_data/vw/db_backup.sqlite3; mv -- "$latest" /srv/service_data/vw/db_backup.sqlite3; fi'
+    - >-
+      /bin/sh -c 'rm -f /srv/service_data/vw/db_[0-9]*.sqlite3'
+  backup:
+    source:
+      - "/srv/service_data/vw"
+    schedule: "*-*-* 04:00:00"
+    schedule-permission: system
+  check:
+    schedule: "Sun *-*-* 04:30:00"
+    schedule-permission: system
+  exclude:
+    - "/srv/service_data/vw/db.sqlite3"
+    - "/srv/service_data/vw/db.sqlite3-wal"
+    - "/srv/service_data/vw/db.sqlite3-shm"
+    - "/srv/service_data/vw/tmp"
+    - "/srv/service_data/vw/sends"
+
+audiobookshelf:
+  inherit: default
+  run-before:
+    - >-
+      /bin/sh -c 'latest=$(ls -t /srv/service_data/audiobookshelf/metadata/backups/* 2>/dev/null | head -n 1);
+      if [ -n "$latest" ]; then rm -f /srv/service_data/audiobookshelf/metadata/backups/audiobookshelf_backup.audiobookshelf; cp -a "$latest" /srv/service_data/audiobookshelf/metadata/backups/audiobookshelf_backup.audiobookshelf; fi'
+  backup:
+    source:
+      - "/srv/service_data/audiobookshelf/audiobooks"
+      - "/srv/service_data/audiobookshelf/podcasts"
+      - "/srv/service_data/audiobookshelf/metadata/backups"
+      - "/srv/service_data/audiobookshelf/config"
+    schedule: "*-*-* 05:30:00"
+    schedule-permission: system
+  check:
+    schedule: "*-*-01 02:00" 
+    schedule-permission: system
