@@ -14,6 +14,7 @@
           tailscale: "{{ sops_raw.tailscale | default({}, true) }}"
           proxy: "{{ sops_raw.proxy | default({}, true) }}"
           vaultwarden: "{{ sops_raw.vaultwarden | default({}, true) }}"
+          s3_hetzner: "{{ sops_raw.s3_hetzner | default({}, true) }}"
 
 - name: System Defaults
   hosts: all
@@ -99,3 +100,12 @@
     sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
     - audiobookshelf
+
+- name: Setup restic backups
+  hosts: homeeins
+  become: true
+  vars:
+    sops: "{{ hostvars['localhost'].sops_data }}"
+    resticprofile_yaml: "{{ lookup('ansible.builtin.template', 'resticprofile/homeeins/profiles.yaml') }}"
+  roles:
+    - restic_backup
