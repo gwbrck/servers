@@ -23,7 +23,7 @@
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
     security_sudoers_passwordless:
-      - "{{ ansible_facts.user_id }}"
+      - "{{ ansible_user }}"
     security_ssh_port: 6861
     security_ssh_password_authentication: "no"
     security_ssh_permit_root_login: "no"
@@ -40,7 +40,7 @@
 - name: Tailscale
   hosts:
     - pivpn
-    - homeeins
+    - homeeins-1
   become: true
   gather_facts: true
   vars:
@@ -76,7 +76,7 @@
       changed_when: false
 
 - name: Setup Traefik
-  hosts: homeeins
+  hosts: homeeins-1
   become: true
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
@@ -84,7 +84,7 @@
     - traefik
 
 - name: Setup vaultwarden
-  hosts: homeeins
+  hosts: homeeins-1
   become: true
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
@@ -94,7 +94,7 @@
     - vaultwarden
 
 - name: Setup audiobookshelf
-  hosts: homeeins
+  hosts: homeeins-1
   become: true
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
@@ -102,10 +102,10 @@
     - audiobookshelf
 
 - name: Setup restic backups
-  hosts: homeeins
+  hosts: homeeins-1
   become: true
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
-    resticprofile_yaml: "{{ lookup('ansible.builtin.template', 'resticprofile/homeeins/profiles.yaml') }}"
+    resticprofile_yaml: "{{ lookup('ansible.builtin.template', 'resticprofile/homeeins-1/profiles.yaml') }}"
   roles:
     - restic_backup
