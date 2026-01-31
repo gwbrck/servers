@@ -25,7 +25,14 @@ ubuntu_gpg_key: "843938DF228D22F7B3742BC0D94AA3F0EFE21092"
 # Storage-Konfiguration
 ubuntu_auto_install_storage:
   config:
-    - id: mmc0
+    - type: disk
+      id: emmc-wipe
+      match:
+        path: /dev/mmcblk0
+      wipe: superblock-recursive
+      preserve: false
+
+    - id: ssd0
       type: disk
       ptable: gpt
       match:
@@ -34,28 +41,28 @@ ubuntu_auto_install_storage:
       preserve: false
       grub_device: true
 
-    - id: mmc0p1
+    - id: ssd0p1
       type: partition
-      device: mmc0
+      device: ssd0
       number: 1
       size: 1G
       flag: boot
       grub_device: true
 
-    - id: mmc0p2
+    - id: ssd0p2
       type: partition
-      device: mmc0
+      device: ssd0
       number: 2
       size: -1
 
     - id: fmt-esp
       type: format
-      volume: mmc0p1
+      volume: ssd0p1
       fstype: vfat
 
     - id: fmt-root
       type: format
-      volume: mmc0p2
+      volume: ssd0p2
       fstype: ext4
 
     - id: mnt-esp
@@ -75,7 +82,6 @@ ubuntu_auto_install_storage:
       preserve: true
       wipe: false
 
-      # Wir greifen uns die existierende Partition (Annahme: Partition 1)
     - type: partition
       id: data-part
       device: data-disk
@@ -88,7 +94,6 @@ ubuntu_auto_install_storage:
       fstype: ext4
       preserve: true
 
-      # Optional: Direkt irgendwo einhängen
     - type: mount
       id: mount-data
       device: data-format
