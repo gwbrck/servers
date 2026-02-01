@@ -68,7 +68,7 @@ default:
           - name: Tags
             value: "rocket"
           - name: Priority
-            value: "2"
+            value: "1"
     send-after:
       - method: POST
         url: https://ntfy.home.wbrck.de/backup
@@ -81,7 +81,7 @@ default:
           - name: Tags
             value: "white_check_mark"
           - name: Priority
-            value: "3" 
+            value: "2" 
     send-after-fail:
       - method: POST
         url: https://ntfy.home.wbrck.de/backup
@@ -99,7 +99,7 @@ default:
           - name: Tags
             value: "rotating_light,warning"
           - name: Priority
-            value: "5" # Max/Urgent priority
+            value: "4" # Max/Urgent priority
   check:
     tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
     schedule-permission: system
@@ -115,7 +115,7 @@ default:
           - name: Tags
             value: "mag" # Lupe
           - name: Priority
-            value: "2"
+            value: "1"
     send-after:
       - method: POST
         url: https://ntfy.home.wbrck.de/backup
@@ -139,7 +139,7 @@ default:
           - name: Tags
             value: "skull_and_crossbones"
           - name: Priority
-            value: "5"
+            value: "4"
 
 vaultwarden:
   inherit: default
