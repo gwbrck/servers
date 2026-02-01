@@ -8,6 +8,7 @@ default:
   repository: "s3:https://{{ restic_s3_endpoint }}/{{ restic_s3_bucket }}"
   initialize: true
   env-file: "{{ resticprofile_env_file }}"
+  status-file: backup-status.json
   retention:
     keep-daily: 7
     keep-weekly: 4
