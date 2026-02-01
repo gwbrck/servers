@@ -12,6 +12,134 @@ default:
     keep-daily: 7
     keep-weekly: 4
     keep-monthly: 6
+    after-backup: true
+    tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
+  snapshots:
+    tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
+    send-before:
+      - method: POST
+        url: https://ntfy.home.wbrck.de/backup
+        body: "Snapshot-Liste wird abgerufen..."
+        headers:
+          - name: Authorization
+            value: Bearer {{ sops.ntfy.backup_token }}
+          - name: Title
+            value: "{% raw %}📋 Snapshots: {{ .Profile.Name }}{% endraw %}"
+          - name: Tags
+            value: "clipboard"
+          - name: Priority
+            value: "1" 
+    send-after:
+      - method: POST
+        url: https://ntfy.home.wbrck.de/backup
+        body: "Snapshots wurden erfolgreich aufgelistet."
+        headers:
+          - name: Authorization
+            value: Bearer {{ sops.ntfy.backup_token }}
+          - name: Title
+            value: "{% raw %}✅ Snapshots OK: {{ .Profile.Name }}{% endraw %}"
+          - name: Tags
+            value: "file_folder"
+    send-after-fail:
+      - method: POST
+        url: https://ntfy.home.wbrck.de/backup
+        body: "${ERROR}\n\n${ERROR_STDERR}"
+        headers:
+          - name: Authorization
+            value: Bearer {{ sops.ntfy.backup_token }}
+          - name: Title
+            value: "{% raw %}🚨 Snapshots Fehler: {{ .Profile.Name }}{% endraw %}"
+          - name: Tags
+            value: "warning"
+          - name: Priority
+            value: "3"   
+  backup:
+    tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
+    schedule-permission: system
+    send-before:
+      - method: POST
+        url: https://ntfy.home.wbrck.de/backup
+        body: "Backup gestartet..."
+        headers:
+          - name: Authorization
+            value: Bearer {{ sops.ntfy.backup_token }}
+          - name: Title
+            value: "{% raw %}🚀 Start: {{ .Profile.Name }}{% endraw %}"
+          - name: Tags
+            value: "rocket"
+          - name: Priority
+            value: "2"
+    send-after:
+      - method: POST
+        url: https://ntfy.home.wbrck.de/backup
+        body: "Backup erfolgreich beendet."
+        headers:
+          - name: Authorization
+            value: Bearer {{ sops.ntfy.backup_token }}
+          - name: Title
+            value: "{% raw %}✅ Erfolg: {{ .Profile.Name }}{% endraw %}"
+          - name: Tags
+            value: "white_check_mark"
+          - name: Priority
+            value: "3" 
+    send-after-fail:
+      - method: POST
+        url: https://ntfy.home.wbrck.de/backup
+        body: |
+          Fehler beim Backup!
+          
+          Log Output:
+          ${ERROR}
+          ${ERROR_STDERR}
+        headers:
+          - name: Authorization
+            value: Bearer {{ sops.ntfy.backup_token }}
+          - name: Title
+            value: "{% raw %}🚨 FEHLER: {{ .Profile.Name }}{% endraw %}"
+          - name: Tags
+            value: "rotating_light,warning"
+          - name: Priority
+            value: "5" # Max/Urgent priority
+  check:
+    tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
+    schedule-permission: system
+    send-before:
+      - method: POST
+        url: https://ntfy.home.wbrck.de/backup
+        body: "Integritäts-Check gestartet..."
+        headers:
+          - name: Authorization
+            value: Bearer {{ sops.ntfy.backup_token }}
+          - name: Title
+            value: "{% raw %}🔍 Check Start: {{ .Profile.Name }}{% endraw %}"
+          - name: Tags
+            value: "mag" # Lupe
+          - name: Priority
+            value: "2"
+    send-after:
+      - method: POST
+        url: https://ntfy.home.wbrck.de/backup
+        body: "Repository ist gesund."
+        headers:
+          - name: Authorization
+            value: Bearer {{ sops.ntfy.backup_token }}
+          - name: Title
+            value: "{% raw %}💚 Check OK: {{ .Profile.Name }}{% endraw %}"
+          - name: Tags
+            value: "green_heart"        
+    send-after-fail:
+      - method: POST
+        url: https://ntfy.home.wbrck.de/backup
+        body: "${ERROR}\n\n${ERROR_STDERR}"
+        headers:
+          - name: Authorization
+            value: Bearer {{ sops.ntfy.backup_token }}
+          - name: Title
+            value: "{% raw %}💀 Check CRITICAL: {{ .Profile.Name }}{% endraw %}"
+          - name: Tags
+            value: "skull_and_crossbones"
+          - name: Priority
+            value: "5"
 
 vaultwarden:
   inherit: default
@@ -25,11 +153,9 @@ vaultwarden:
   backup:
     source:
       - "/srv/service_data/vw"
-    schedule: "*-*-* 04:00:00"
-    schedule-permission: system
+    schedule: "*-*-* 04:00:00" 
   check:
     schedule: "Sun *-*-* 04:30:00"
-    schedule-permission: system
   exclude:
     - "/srv/service_data/vw/db.sqlite3"
     - "/srv/service_data/vw/db.sqlite3-wal"
@@ -50,7 +176,5 @@ audiobookshelf:
       - "/srv/service_data/audiobookshelf/metadata/backups"
       - "/srv/service_data/audiobookshelf/config"
     schedule: "*-*-* 05:30:00"
-    schedule-permission: system
   check:
     schedule: "*-*-01 02:00" 
-    schedule-permission: system
