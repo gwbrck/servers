@@ -1,0 +1,33 @@
+---
+- name: Ensure ntfy directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  become: true
+  loop:
+    - "{{ ntfy_compose_dir }}"
+
+- name: Deploy ntfy Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ ntfy_compose_dir }}/{{ ntfy_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Pull images
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ ntfy_compose_dir }}"
+
+- name: Create and start services
+  community.docker.docker_compose_v2:
+    project_src: "{{ ntfy_compose_dir }}"
+  register: output
+
+- name: Show results
+  ansible.builtin.debug:
+    var: output
+    verbosity: 1

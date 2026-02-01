@@ -15,6 +15,7 @@
           proxy: "{{ sops_raw.proxy | default({}, true) }}"
           vaultwarden: "{{ sops_raw.vaultwarden | default({}, true) }}"
           s3_hetzner: "{{ sops_raw.s3_hetzner | default({}, true) }}"
+          ntfy: "{{ sops_raw.ntfy | default({}, true) }}"
 
 - name: System Defaults
   hosts: all
@@ -100,6 +101,14 @@
     sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
     - audiobookshelf
+
+- name: Setup ntfy
+  hosts: homeeins-1
+  become: true
+  vars:
+    sops: "{{ hostvars['localhost'].sops_data }}"
+  roles:
+    - ntfy
 
 - name: Setup restic backups
   hosts: homeeins-1

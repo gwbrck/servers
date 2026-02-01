@@ -1,0 +1,35 @@
+services:
+  ntfy:
+    image: "binwiederhier/ntfy"
+    container_name: "ntfy"
+    command:
+      - serve
+    volumes:
+      - ./:/var/lib/ntfy
+    restart: unless-stopped
+    labels:
+      - "traefik.enable={{ ntfy_traefik_enable | default(true) | ternary('true', 'false') }}"
+      - "traefik.docker.network={{ ntfy_traefik_network }}"
+      - "traefik.http.routers.{{ ntfy_traefik_router_name }}.rule=Host(`{{ ntfy_public_url }}`)"
+      - "traefik.http.routers.{{ ntfy_traefik_router_name }}.entrypoints=websecure"
+      - "traefik.http.routers.{{ ntfy_traefik_router_name }}.tls.certresolver={{ ntfy_traefik_cert_resolver }}"
+      - "traefik.http.services.{{ ntfy_traefik_router_name }}.loadbalancer.server.port=80"
+    networks:
+      - "{{ ntfy_traefik_network }}"
+    environment:
+      NTFY_AUTH_USERS: '{{ sops.ntfy.auth_users }}'
+      NTFY_AUTH_TOKENS: '{{ sops.ntfy.auth_tokens }}'
+      NTFY_BASE_URL: https://{{ ntfy_public_url }}
+      NTFY_CACHE_FILE: /var/lib/ntfy/cache.db
+      NTFY_AUTH_FILE: /var/lib/ntfy/auth.db
+      NTFY_AUTH_DEFAULT_ACCESS: deny-all
+      NTFY_BEHIND_PROXY: true
+      NTFY_ATTACHMENT_CACHE_DIR: /var/lib/ntfy/attachments
+      NTFY_ENABLE_LOGIN: true
+      NTFY_UPSTREAM_BASE_URL: https://ntfy.sh
+      TZ: {{ ntfy_timezone }}
+
+networks:
+  {{ ntfy_traefik_network }}:
+    name: {{ ntfy_traefik_network }}
+    external: true
