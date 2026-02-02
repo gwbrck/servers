@@ -1,0 +1,36 @@
+---
+- name: Ensure Actual Budget directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  become: true
+  loop:
+    - "{{ actual_compose_dir }}"
+    - "{{ actual_data_dir }}"
+    - "{{ actual_server_files_dir }}"
+    - "{{ actual_user_files_dir }}"
+
+- name: Deploy Actual Budget Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ actual_compose_dir }}/{{ actual_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Pull images
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ actual_compose_dir }}"
+
+- name: Create and start services
+  community.docker.docker_compose_v2:
+    project_src: "{{ actual_compose_dir }}"
+  register: output
+
+- name: Show results
+  ansible.builtin.debug:
+    var: output
+    verbosity: 1

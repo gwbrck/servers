@@ -179,3 +179,17 @@ audiobookshelf:
     schedule: "*-*-* 05:30:00"
   check:
     schedule: "*-*-01 02:00" 
+
+actual:
+  inherit: default
+  run-before:
+    - "docker compose -f /opt/actual_budget/docker-compose.yaml stop actual_server"
+  run-after:
+    - "docker compose -f /opt/actual_budget/docker-compose.yaml start actual_server"
+  backup:
+    source:
+      - "/srv/service_data/actual/server-files"
+      - "/srv/service_data/actual/user-files"
+    schedule: "*-*-* 04:45:00"
+  check:
+    schedule: "Sun *-*-* 04:50:00"

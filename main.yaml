@@ -110,6 +110,14 @@
   roles:
     - ntfy
 
+- name: Setup Actual
+  hosts: homeeins-1
+  become: true
+  vars:
+    sops: "{{ hostvars['localhost'].sops_data }}"
+  roles:
+    - actual_budget
+
 - name: Setup restic backups
   hosts: homeeins-1
   become: true
