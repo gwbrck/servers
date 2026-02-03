@@ -17,19 +17,6 @@ default:
     tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
   snapshots:
     tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
-    send-before:
-      - method: POST
-        url: https://ntfy.home.wbrck.de/backup
-        body: "Snapshot-Liste wird abgerufen..."
-        headers:
-          - name: Authorization
-            value: Bearer {{ sops.ntfy.backup_token }}
-          - name: Title
-            value: "{% raw %}📋 Snapshots: {{ .Profile.Name }}{% endraw %}"
-          - name: Tags
-            value: "clipboard"
-          - name: Priority
-            value: "1" 
     send-after:
       - method: POST
         url: https://ntfy.home.wbrck.de/backup
@@ -53,23 +40,10 @@ default:
           - name: Tags
             value: "warning"
           - name: Priority
-            value: "3"   
+            value: "4"   
   backup:
     tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
     schedule-permission: system
-    send-before:
-      - method: POST
-        url: https://ntfy.home.wbrck.de/backup
-        body: "Backup gestartet..."
-        headers:
-          - name: Authorization
-            value: Bearer {{ sops.ntfy.backup_token }}
-          - name: Title
-            value: "{% raw %}🚀 Start: {{ .Profile.Name }}{% endraw %}"
-          - name: Tags
-            value: "rocket"
-          - name: Priority
-            value: "1"
     send-after:
       - method: POST
         url: https://ntfy.home.wbrck.de/backup
@@ -104,19 +78,6 @@ default:
   check:
     tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
     schedule-permission: system
-    send-before:
-      - method: POST
-        url: https://ntfy.home.wbrck.de/backup
-        body: "Integritäts-Check gestartet..."
-        headers:
-          - name: Authorization
-            value: Bearer {{ sops.ntfy.backup_token }}
-          - name: Title
-            value: "{% raw %}🔍 Check Start: {{ .Profile.Name }}{% endraw %}"
-          - name: Tags
-            value: "mag" # Lupe
-          - name: Priority
-            value: "1"
     send-after:
       - method: POST
         url: https://ntfy.home.wbrck.de/backup
@@ -193,3 +154,12 @@ actual:
     schedule: "*-*-* 04:45:00"
   check:
     schedule: "Sun *-*-* 04:50:00"
+
+archiv_gregor:
+  inherit: default
+  backup:
+    source:
+      - "/srv/archiv_gregor"
+    schedule: "Sun *-*-* 04:45:00"
+  check:
+    schedule: "*-*-28..31 04:50:00"
