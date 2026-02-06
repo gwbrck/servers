@@ -1,0 +1,51 @@
+- name: Ensure OpenCloud compose directory exists
+  ansible.builtin.file:
+    path: "{{ opencloud_compose_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  become: true
+
+- name: Ensure OpenCloud data directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "1000"
+    group: "1000"
+    mode: "0750"
+  become: true
+  loop:
+    - "{{ opencloud_config_dir }}"
+    - "{{ opencloud_data_dir }}"
+
+- name: Deploy OpenCloud Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ opencloud_compose_dir }}/{{ opencloud_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy OpenCloud environment file
+  no_log: true
+  ansible.builtin.template:
+    src: opencloud.env.j2
+    dest: "{{ opencloud_compose_dir }}/.env"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Pull images
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ opencloud_compose_dir }}"
+
+- name: Create and start services
+  community.docker.docker_compose_v2:
+    project_src: "{{ opencloud_compose_dir }}"
+  register: output
+
+- name: Show results
+  ansible.builtin.debug:
+    var: output
+    verbosity: 1

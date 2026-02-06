@@ -1,0 +1,20 @@
+# Pfade auf dem Host-System
+opencloud_compose_dir: "/opt/opencloud"
+opencloud_compose_file: "docker-compose.yaml"
+opencloud_config_dir: "/srv/service_data/opencloud/config"
+opencloud_data_dir: "/srv/service_data/opencloud/data"
+
+# Container Image
+opencloud_image: "opencloudeu/opencloud-rolling"
+opencloud_tag: "latest"
+opencloud_uid_gid: "1000:1000"
+
+# OpenCloud Einstellungen
+opencloud_public_url: "{{ sops.opencloud.domain }}"
+opencloud_admin_password: "{{ sops.opencloud.admin_password }}"
+
+# Traefik / Netzwerk Einstellungen
+opencloud_traefik_enable: true
+opencloud_traefik_router_name: "opencloud"
+opencloud_traefik_cert_resolver: "{{ sops.proxy.cert_resolver | default('dnshetzner', true) }}"
+opencloud_traefik_network: "{{ sops.proxy.network_name | default('traefik-net', true) }}"

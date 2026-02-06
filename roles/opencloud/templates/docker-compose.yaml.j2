@@ -1,0 +1,36 @@
+services:
+  opencloud:
+    image: "{{ opencloud_image }}:{{ opencloud_tag }}"
+    container_name: "opencloud"
+    user: "{{ opencloud_uid_gid }}"
+    restart: unless-stopped
+    entrypoint:
+      - /bin/sh
+    command: ["-c", "opencloud init || true; opencloud server"]
+    env_file: .env
+    volumes:
+      - "{{ opencloud_config_dir }}:/etc/opencloud"
+      - "{{ opencloud_data_dir }}:/var/lib/opencloud"
+    labels:
+      - "traefik.enable={{ opencloud_traefik_enable | default(true) | ternary('true', 'false') }}"
+      - "traefik.docker.network={{ opencloud_traefik_network }}"
+      - "traefik.http.routers.{{ opencloud_traefik_router_name }}.rule=Host(`{{ opencloud_public_url }}`)"
+      - "traefik.http.routers.{{ opencloud_traefik_router_name }}.entrypoints=websecure"
+      - "traefik.http.routers.{{ opencloud_traefik_router_name }}.tls.certresolver={{ opencloud_traefik_cert_resolver }}"
+      - "traefik.http.services.{{ opencloud_traefik_router_name }}.loadbalancer.server.port=9200"
+    networks:
+      - "{{ opencloud_traefik_network }}"
+      - opencloud-internal
+
+  tika:
+    image: apache/tika:latest
+    container_name: "opencloud-tika"
+    restart: unless-stopped
+    networks:
+      - opencloud-internal
+
+networks:
+  {{ opencloud_traefik_network }}:
+    name: {{ opencloud_traefik_network }}
+    external: true
+  opencloud-internal:

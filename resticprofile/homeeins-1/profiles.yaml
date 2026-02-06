@@ -155,6 +155,20 @@ actual:
   check:
     schedule: "Sun *-*-* 04:50:00"
 
+opencloud:
+  inherit: default
+  run-before:
+    - "docker compose -f /opt/opencloud/docker-compose.yaml stop opencloud"
+  run-after:
+    - "docker compose -f /opt/opencloud/docker-compose.yaml start opencloud"
+  backup:
+    source:
+      - "/srv/service_data/opencloud/config"
+      - "/srv/service_data/opencloud/data"
+    schedule: "*-*-* 05:00:00"
+  check:
+    schedule: "Sun *-*-* 05:15:00"
+
 archiv_gregor:
   inherit: default
   backup:
