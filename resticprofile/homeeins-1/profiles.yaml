@@ -1,8 +1,37 @@
-version: 1
+version: "2"
 global:
   restic-binary: "/usr/local/bin/restic"
   scheduler: "systemd"
 
+
+groups:
+  nightly-backup:
+    description: "Tägliche Backups aller Profile"
+    continue-on-error: true
+    profiles:
+      - vaultwarden
+      - actual
+      - opencloud
+      - audiobookshelf
+      - archiv_gregor
+    schedules:
+      backup:
+        schedule: "*-*-* 03:30:00"
+        schedule-permission: system
+
+  weekly-check:
+    description: "Wöchentliche Checks aller Profile"
+    continue-on-error: true
+    profiles:
+      - vaultwarden
+      - actual
+      - opencloud
+      - audiobookshelf
+      - archiv_gregor
+    schedules:
+      check:
+        schedule: "Sun *-*-* 04:30:00"
+        schedule-permission: system
 
 default:
   repository: "s3:https://{{ restic_s3_endpoint }}/{{ restic_s3_bucket }}"
@@ -115,9 +144,6 @@ vaultwarden:
   backup:
     source:
       - "/srv/service_data/vw"
-    schedule: "*-*-* 04:00:00" 
-  check:
-    schedule: "Sun *-*-* 04:30:00"
   exclude:
     - "/srv/service_data/vw/db.sqlite3"
     - "/srv/service_data/vw/db.sqlite3-wal"
@@ -137,9 +163,6 @@ audiobookshelf:
       - "/srv/service_data/audiobookshelf/podcasts"
       - "/srv/service_data/audiobookshelf/metadata/backups"
       - "/srv/service_data/audiobookshelf/config"
-    schedule: "*-*-* 05:30:00"
-  check:
-    schedule: "*-*-01 02:00" 
 
 actual:
   inherit: default
@@ -151,9 +174,6 @@ actual:
     source:
       - "/srv/service_data/actual/server-files"
       - "/srv/service_data/actual/user-files"
-    schedule: "*-*-* 04:45:00"
-  check:
-    schedule: "Sun *-*-* 04:50:00"
 
 opencloud:
   inherit: default
@@ -165,15 +185,9 @@ opencloud:
     source:
       - "/srv/service_data/opencloud/config"
       - "/srv/service_data/opencloud/data"
-    schedule: "*-*-* 05:00:00"
-  check:
-    schedule: "Sun *-*-* 05:15:00"
 
 archiv_gregor:
   inherit: default
   backup:
     source:
       - "/srv/archiv_gregor"
-    schedule: "Sun *-*-* 04:45:00"
-  check:
-    schedule: "*-*-28..31 04:50:00"
