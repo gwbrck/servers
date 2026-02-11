@@ -1,16 +1,25 @@
 ---
 - name: Ensure FreshRSS directories exist
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ item.path }}"
     state: directory
-    owner: root
-    group: root
-    mode: "0750"
+    owner: "{{ item.owner }}"
+    group: "{{ item.group }}"
+    mode: "{{ item.mode }}"
   become: true
   loop:
-    - "{{ freshrss_compose_dir }}"
-    - "{{ freshrss_data_dir }}"
-    - "{{ freshrss_extensions_dir }}"
+    - path: "{{ freshrss_compose_dir }}"
+      owner: root
+      group: root
+      mode: "0750"
+    - path: "{{ freshrss_data_dir }}"
+      owner: root
+      group: www-data
+      mode: "0770"
+    - path: "{{ freshrss_extensions_dir }}"
+      owner: root
+      group: www-data
+      mode: "0750"
 
 - name: Clone xExtension-Readable into extensions directory
   ansible.builtin.git:
