@@ -1,7 +1,10 @@
 ---
+# Pfade auf dem Host-System
 vaultwarden_compose_dir: "/opt/vaultwarden"
 vaultwarden_compose_file: "docker-compose.yaml"
-vaultwarden_data_dir: "{{ vaultwarden_compose_dir }}/data"
+vaultwarden_data_dir: "/srv/service_data/vw"
+
+# Traefik / Netzwerk Einstellungen
 vaultwarden_public_url: "{{ sops.vaultwarden.domain }}"
 vaultwarden_traefik_enable: true
 vaultwarden_traefik_router_name: "vaultwarden"

@@ -23,7 +23,7 @@
 
 - name: Ensure Traefik Docker network exists
   community.docker.docker_network:
-    name: "{{ traefik_network_name }}"
+    name: "{{ traefik_traefik_network }}"
     state: present
   become: true
 

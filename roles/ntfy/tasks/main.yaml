@@ -9,6 +9,7 @@
   become: true
   loop:
     - "{{ ntfy_compose_dir }}"
+    - "{{ ntfy_data_dir }}"
 
 - name: Deploy ntfy Docker Compose file
   ansible.builtin.template:

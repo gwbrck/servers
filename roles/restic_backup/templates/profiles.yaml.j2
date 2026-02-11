@@ -1,1 +1,206 @@
-{{ resticprofile_yaml | trim }}
+version: "2"
+global:
+  restic-binary: "/usr/local/bin/restic"
+  scheduler: "systemd"
+
+
+groups:
+  nightly-backup:
+    description: "Tägliche Backups aller Profile"
+    continue-on-error: true
+    profiles:
+      - vaultwarden
+      - actual
+      - opencloud
+      - audiobookshelf
+      - archiv_gregor
+      - freshrss
+    schedules:
+      backup:
+        at: "*-*-* 03:30:00"
+        permission: system
+
+  weekly-check:
+    description: "Wöchentliche Checks aller Profile"
+    continue-on-error: true
+    profiles:
+      - vaultwarden
+      - actual
+      - opencloud
+      - audiobookshelf
+      - archiv_gregor
+      - freshrss
+    schedules:
+      check:
+        at: "Sun *-*-* 04:30:00"
+        permission: system
+
+profiles:
+  default:
+    repository: "s3:https://{{ restic_s3_endpoint }}/{{ restic_s3_bucket }}"
+    initialize: true
+    env-file: "{{ resticprofile_env_file }}"
+    status-file: backup-status.json
+    retention:
+      keep-daily: 7
+      keep-weekly: 4
+      keep-monthly: 6
+      after-backup: true
+      tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
+    snapshots:
+      tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
+      send-after:
+        - method: POST
+          url: https://ntfy.home.wbrck.de/backup
+          body: "Snapshots wurden erfolgreich aufgelistet."
+          headers:
+            - name: Authorization
+              value: Bearer {{ sops.ntfy.backup_token }}
+            - name: Title
+              value: "{% raw %}✅ Snapshots OK: {{ .Profile.Name }}{% endraw %}"
+            - name: Tags
+              value: "file_folder"
+      send-after-fail:
+        - method: POST
+          url: https://ntfy.home.wbrck.de/backup
+          body: "${ERROR}\n\n${ERROR_STDERR}"
+          headers:
+            - name: Authorization
+              value: Bearer {{ sops.ntfy.backup_token }}
+            - name: Title
+              value: "{% raw %}🚨 Snapshots Fehler: {{ .Profile.Name }}{% endraw %}"
+            - name: Tags
+              value: "warning"
+            - name: Priority
+              value: "4"
+    backup:
+      tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
+      schedule-permission: system
+      send-after:
+        - method: POST
+          url: https://ntfy.home.wbrck.de/backup
+          body: "Backup erfolgreich beendet."
+          headers:
+            - name: Authorization
+              value: Bearer {{ sops.ntfy.backup_token }}
+            - name: Title
+              value: "{% raw %}✅ Erfolg: {{ .Profile.Name }}{% endraw %}"
+            - name: Tags
+              value: "white_check_mark"
+            - name: Priority
+              value: "2"
+      send-after-fail:
+        - method: POST
+          url: https://ntfy.home.wbrck.de/backup
+          body: |
+            Fehler beim Backup!
+
+            Log Output:
+            ${ERROR}
+            ${ERROR_STDERR}
+          headers:
+            - name: Authorization
+              value: Bearer {{ sops.ntfy.backup_token }}
+            - name: Title
+              value: "{% raw %}🚨 FEHLER: {{ .Profile.Name }}{% endraw %}"
+            - name: Tags
+              value: "rotating_light,warning"
+            - name: Priority
+              value: "4" # Max/Urgent priority
+    check:
+      tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
+      schedule-permission: system
+      send-after:
+        - method: POST
+          url: https://ntfy.home.wbrck.de/backup
+          body: "Repository ist gesund."
+          headers:
+            - name: Authorization
+              value: Bearer {{ sops.ntfy.backup_token }}
+            - name: Title
+              value: "{% raw %}💚 Check OK: {{ .Profile.Name }}{% endraw %}"
+            - name: Tags
+              value: "green_heart"
+      send-after-fail:
+        - method: POST
+          url: https://ntfy.home.wbrck.de/backup
+          body: "${ERROR}\n\n${ERROR_STDERR}"
+          headers:
+            - name: Authorization
+              value: Bearer {{ sops.ntfy.backup_token }}
+            - name: Title
+              value: "{% raw %}💀 Check CRITICAL: {{ .Profile.Name }}{% endraw %}"
+            - name: Tags
+              value: "skull_and_crossbones"
+            - name: Priority
+              value: "4"
+
+  vaultwarden:
+    inherit: default
+    run-before:
+      - "docker compose -f /opt/vaultwarden/docker-compose.yaml exec -T vaultwarden /vaultwarden backup"
+      - >-
+        /bin/sh -c 'latest=$(ls -t /srv/service_data/vw/db_[0-9]*.sqlite3 2>/dev/null | head -n 1);
+        if [ -n "$latest" ]; then rm -f /srv/service_data/vw/db_backup.sqlite3; mv -- "$latest" /srv/service_data/vw/db_backup.sqlite3; fi'
+      - >-
+        /bin/sh -c 'rm -f /srv/service_data/vw/db_[0-9]*.sqlite3'
+    backup:
+      source:
+        - "/srv/service_data/vw"
+      exclude:
+        - "/srv/service_data/vw/db.sqlite3"
+        - "/srv/service_data/vw/db.sqlite3-wal"
+        - "/srv/service_data/vw/db.sqlite3-shm"
+        - "/srv/service_data/vw/tmp"
+        - "/srv/service_data/vw/sends"
+
+  audiobookshelf:
+    inherit: default
+    run-before:
+      - >-
+        /bin/sh -c 'latest=$(ls -t /srv/service_data/audiobookshelf/metadata/backups/* 2>/dev/null | head -n 1);
+        if [ -n "$latest" ]; then rm -f /srv/service_data/audiobookshelf/metadata/backups/audiobookshelf_backup.audiobookshelf; cp -a "$latest" /srv/service_data/audiobookshelf/metadata/backups/audiobookshelf_backup.audiobookshelf; fi'
+    backup:
+      source:
+        - "/srv/service_data/audiobookshelf/audiobooks"
+        - "/srv/service_data/audiobookshelf/podcasts"
+        - "/srv/service_data/audiobookshelf/metadata/backups"
+        - "/srv/service_data/audiobookshelf/config"
+
+  actual:
+    inherit: default
+    run-before:
+      - "docker compose -f /opt/actual_budget/docker-compose.yaml stop actual_server"
+    run-after:
+      - "docker compose -f /opt/actual_budget/docker-compose.yaml start actual_server"
+    backup:
+      source:
+        - "/srv/service_data/actual/server-files"
+        - "/srv/service_data/actual/user-files"
+
+  opencloud:
+    inherit: default
+    run-before:
+      - "docker compose -f /opt/opencloud/docker-compose.yaml stop opencloud"
+    run-after:
+      - "docker compose -f /opt/opencloud/docker-compose.yaml start opencloud"
+    backup:
+      source:
+        - "/srv/service_data/opencloud/config"
+        - "/srv/service_data/opencloud/data"
+
+  archiv_gregor:
+    inherit: default
+    backup:
+      source:
+        - "/srv/archiv_gregor"
+
+  freshrss:
+    inherit: default
+    run-before:
+      - "docker compose -f /opt/freshrss/docker-compose.yaml stop freshrss"
+    run-after:
+      - "docker compose -f /opt/freshrss/docker-compose.yaml start freshrss"
+    backup:
+      source:
+        - "/srv/service_data/freshrss"

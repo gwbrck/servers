@@ -5,7 +5,7 @@ services:
     command:
       - serve
     volumes:
-      - ./:/var/lib/ntfy
+      - "{{ ntfy_data_dir }}:/var/lib/ntfy"
     restart: unless-stopped
     labels:
       - "traefik.enable={{ ntfy_traefik_enable | default(true) | ternary('true', 'false') }}"

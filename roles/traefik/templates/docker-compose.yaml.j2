@@ -33,7 +33,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "{{ traefik_data_dir }}:/letsencrypt"
     networks:
-      - "{{ traefik_network_name }}"
+      - "{{ traefik_traefik_network }}"
     
     labels:
       # Dashboard erreichbar unter https://{{ traefik_dashboard_url }}
@@ -44,6 +44,6 @@ services:
       - "traefik.http.routers.api.service=api@internal"
 
 networks:
-  {{ traefik_network_name }}:
-    name: {{ traefik_network_name }}
+  {{ traefik_traefik_network }}:
+    name: {{ traefik_traefik_network }}
     external: true
