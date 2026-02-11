@@ -10,7 +10,21 @@ ntfy_public_url: "ntfy.home.wbrck.de"
 
 # SSH / Sicherheit
 security_ssh_port: 6861
+security_ssh_password_authentication: "no"
+security_ssh_permit_root_login: "no"
+security_ssh_permit_empty_password: "no"
+security_autoupdate_enabled: true
+security_autoupdate_reboot: true
+security_autoupdate_reboot_time: "04:00"
+security_fail2ban_enabled: true
 
 # Allgemeine Defaults
 default_timezone: "Europe/Berlin"
+default_locale: "de_DE.UTF-8"
+default_keyboard_layout: "de"
 default_compose_file: "docker-compose.yaml"
+
+# Basispfade
+services_compose_base: "/opt"
+services_data_base: "/srv/service_data"
+system_bin_dir: "/usr/local/bin"

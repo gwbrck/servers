@@ -26,13 +26,6 @@
   vars:
     security_sudoers_passwordless:
       - "{{ ansible_user }}"
-    security_ssh_password_authentication: "no"
-    security_ssh_permit_root_login: "no"
-    security_ssh_permit_empty_password: "no"
-    security_autoupdate_enabled: true
-    security_autoupdate_reboot: true
-    security_autoupdate_reboot_time: "04:00"
-    security_fail2ban_enabled: true
   roles:
     - role: geerlingguy.security
       tags: [defaults, security]

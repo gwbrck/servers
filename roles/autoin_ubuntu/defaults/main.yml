@@ -1,7 +1,7 @@
-autoin_ubuntu_locale: "de_DE.UTF-8"
+autoin_ubuntu_locale: "{{ default_locale }}"
 
-autoin_ubuntu_keyboard_layout: "de"
-autoin_ubuntu_timezone: "Europe/Berlin"
+autoin_ubuntu_keyboard_layout: "{{ default_keyboard_layout }}"
+autoin_ubuntu_timezone: "{{ default_timezone }}"
 
 autoin_ubuntu_iso_arch: "amd64"
 # Valid values are: amd64, arm64
