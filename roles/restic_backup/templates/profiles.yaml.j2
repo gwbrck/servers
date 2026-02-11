@@ -51,22 +51,22 @@ profiles:
       tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
       send-after:
         - method: POST
-          url: https://ntfy.home.wbrck.de/backup
+          url: {{ restic_backup_ntfy_url }}/{{ restic_backup_ntfy_topic }}
           body: "Snapshots wurden erfolgreich aufgelistet."
           headers:
             - name: Authorization
-              value: Bearer {{ sops.ntfy.backup_token }}
+              value: Bearer {{ restic_backup_ntfy_token }}
             - name: Title
               value: "{% raw %}✅ Snapshots OK: {{ .Profile.Name }}{% endraw %}"
             - name: Tags
               value: "file_folder"
       send-after-fail:
         - method: POST
-          url: https://ntfy.home.wbrck.de/backup
+          url: {{ restic_backup_ntfy_url }}/{{ restic_backup_ntfy_topic }}
           body: "${ERROR}\n\n${ERROR_STDERR}"
           headers:
             - name: Authorization
-              value: Bearer {{ sops.ntfy.backup_token }}
+              value: Bearer {{ restic_backup_ntfy_token }}
             - name: Title
               value: "{% raw %}🚨 Snapshots Fehler: {{ .Profile.Name }}{% endraw %}"
             - name: Tags
@@ -78,11 +78,11 @@ profiles:
       schedule-permission: system
       send-after:
         - method: POST
-          url: https://ntfy.home.wbrck.de/backup
+          url: {{ restic_backup_ntfy_url }}/{{ restic_backup_ntfy_topic }}
           body: "Backup erfolgreich beendet."
           headers:
             - name: Authorization
-              value: Bearer {{ sops.ntfy.backup_token }}
+              value: Bearer {{ restic_backup_ntfy_token }}
             - name: Title
               value: "{% raw %}✅ Erfolg: {{ .Profile.Name }}{% endraw %}"
             - name: Tags
@@ -91,7 +91,7 @@ profiles:
               value: "2"
       send-after-fail:
         - method: POST
-          url: https://ntfy.home.wbrck.de/backup
+          url: {{ restic_backup_ntfy_url }}/{{ restic_backup_ntfy_topic }}
           body: |
             Fehler beim Backup!
 
@@ -100,7 +100,7 @@ profiles:
             ${ERROR_STDERR}
           headers:
             - name: Authorization
-              value: Bearer {{ sops.ntfy.backup_token }}
+              value: Bearer {{ restic_backup_ntfy_token }}
             - name: Title
               value: "{% raw %}🚨 FEHLER: {{ .Profile.Name }}{% endraw %}"
             - name: Tags
@@ -112,22 +112,22 @@ profiles:
       schedule-permission: system
       send-after:
         - method: POST
-          url: https://ntfy.home.wbrck.de/backup
+          url: {{ restic_backup_ntfy_url }}/{{ restic_backup_ntfy_topic }}
           body: "Repository ist gesund."
           headers:
             - name: Authorization
-              value: Bearer {{ sops.ntfy.backup_token }}
+              value: Bearer {{ restic_backup_ntfy_token }}
             - name: Title
               value: "{% raw %}💚 Check OK: {{ .Profile.Name }}{% endraw %}"
             - name: Tags
               value: "green_heart"
       send-after-fail:
         - method: POST
-          url: https://ntfy.home.wbrck.de/backup
+          url: {{ restic_backup_ntfy_url }}/{{ restic_backup_ntfy_topic }}
           body: "${ERROR}\n\n${ERROR_STDERR}"
           headers:
             - name: Authorization
-              value: Bearer {{ sops.ntfy.backup_token }}
+              value: Bearer {{ restic_backup_ntfy_token }}
             - name: Title
               value: "{% raw %}💀 Check CRITICAL: {{ .Profile.Name }}{% endraw %}"
             - name: Tags

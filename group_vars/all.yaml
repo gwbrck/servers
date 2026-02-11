@@ -1,13 +1,15 @@
 ---
-# Globale Variablen – gelten für alle Hosts
-# ============================================
-
-# SOPS-Secrets (von localhost-fact übernommen)
 sops: "{{ hostvars['localhost'].sops_data }}"
 
 # Traefik / Reverse-Proxy Defaults
 traefik_network: "{{ sops.proxy.network_name | default('traefik-net', true) }}"
 traefik_cert_resolver: "{{ sops.proxy.cert_resolver | default('dnshetzner', true) }}"
+
+# ntfy
+ntfy_public_url: "ntfy.home.wbrck.de"
+
+# SSH / Sicherheit
+security_ssh_port: 6861
 
 # Allgemeine Defaults
 default_timezone: "Europe/Berlin"
