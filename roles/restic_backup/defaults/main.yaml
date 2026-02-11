@@ -22,3 +22,8 @@ restic_backup_s3_region: "{{ sops.s3_hetzner.s3_region | default('fsn1', true) }
 restic_backup_s3_access_key: "{{ sops.s3_hetzner.access_key | default('', true) }}"
 restic_backup_s3_secret_key: "{{ sops.s3_hetzner.secret_key | default('', true) }}"
 restic_backup_password: "{{ sops.s3_hetzner.restic_pw | default('', true) }}"
+
+# ntfy-Benachrichtigungen
+restic_backup_ntfy_url: "https://{{ ntfy_public_url }}"
+restic_backup_ntfy_topic: "backup"
+restic_backup_ntfy_token: "{{ sops.ntfy.backup_token }}"

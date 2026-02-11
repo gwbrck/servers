@@ -8,7 +8,6 @@ ntfy_data_dir: "/srv/service_data/ntfy"
 ntfy_timezone: "{{ default_timezone }}"
 
 # Traefik / Netzwerk Einstellungen
-ntfy_public_url: "ntfy.home.wbrck.de"
 ntfy_traefik_enable: true
 ntfy_traefik_router_name: "ntfy"
 ntfy_traefik_cert_resolver: "{{ traefik_cert_resolver }}"
