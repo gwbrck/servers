@@ -1,11 +1,12 @@
 ---
+# Pfade auf dem Host-System
 actual_compose_dir: "/opt/actual_budget"
 actual_compose_file: "docker-compose.yaml"
-
 actual_data_dir: "/srv/service_data/actual"
 actual_server_files_dir: "{{ actual_data_dir }}/server-files"
 actual_user_files_dir: "{{ actual_data_dir }}/user-files"
 
+# Traefik / Netzwerk Einstellungen
 actual_public_url: "budget.home.wbrck.de"
 actual_traefik_enable: true
 actual_traefik_router_name: "actual"

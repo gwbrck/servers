@@ -2,10 +2,11 @@
 # Pfade auf dem Host-System
 audiobookshelf_compose_dir: "/opt/audiobookshelf"
 audiobookshelf_compose_file: "docker-compose.yaml"
-audiobookshelf_audiobooks_dir: "/srv/service_data/audiobookshelf/audiobooks"
-audiobookshelf_podcasts_dir: "/srv/service_data/audiobookshelf/podcasts"
-audiobookshelf_config_dir: "/srv/service_data/audiobookshelf/config"
-audiobookshelf_metadata_dir: "/srv/service_data/audiobookshelf/metadata"
+audiobookshelf_data_dir: "/srv/service_data/audiobookshelf"
+audiobookshelf_audiobooks_dir: "{{ audiobookshelf_data_dir }}/audiobooks"
+audiobookshelf_podcasts_dir: "{{ audiobookshelf_data_dir }}/podcasts"
+audiobookshelf_config_dir: "{{ audiobookshelf_data_dir }}/config"
+audiobookshelf_metadata_dir: "{{ audiobookshelf_data_dir }}/metadata"
 
 # Zeitzone
 audiobookshelf_timezone: "Europe/Berlin"

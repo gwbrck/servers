@@ -162,7 +162,7 @@
     group: root
     mode: "0444"
   with_fileglob:
-    - "../resticprofile/{{ inventory_hostname }}/copy/*"
+    - "{{ inventory_hostname }}/copy/*"
 
 - name: Install keys
   ansible.builtin.copy:
@@ -173,7 +173,7 @@
     group: root
     mode: "0400"
   with_fileglob:
-    - "../resticprofile/{{ inventory_hostname }}/keys/*"
+    - "{{ inventory_hostname }}/keys/*"
 
 - name: Remove temp directory
   ansible.builtin.file:
