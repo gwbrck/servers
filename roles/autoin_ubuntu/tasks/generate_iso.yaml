@@ -1,0 +1,99 @@
+---
+- name: Ensure output ISO is absent (cleanup before build)
+  ansible.builtin.file:
+    path: "{{ autoin_ubuntu_target_dir }}/ubuntu_autoinstall_{{ autoin_ubuntu_iso_arch }}.iso"
+    state: absent
+
+- name: Prepare work dir
+  ansible.builtin.file:
+    path: "{{ autoin_ubuntu_target_dir }}/work"
+    state: directory
+    mode: "0750"
+
+- name: Generate autoinstall.yaml
+  ansible.builtin.template:
+    src: autoinstall.yaml.j2
+    dest: "{{ autoin_ubuntu_target_dir }}/work/autoinstall.yaml"
+    mode: "0640"
+
+- name: Remove previously extracted boot config files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ autoin_ubuntu_target_dir }}/work/grub.cfg"
+    - "{{ autoin_ubuntu_target_dir }}/work/loopback.cfg"
+    - "{{ autoin_ubuntu_target_dir }}/work/efi_grub.cfg"
+    - "{{ autoin_ubuntu_target_dir }}/work/txt.cfg"
+
+- name: Extract /boot/grub/grub.cfg
+  ansible.builtin.command: >-
+    xorriso -osirrox on
+    -indev {{ autoin_ubuntu_target_dir }}/noble-live-server-{{ autoin_ubuntu_iso_arch }}.iso
+    -extract /boot/grub/grub.cfg {{ autoin_ubuntu_target_dir }}/work/grub.cfg
+  changed_when: true
+
+- name: Extract /boot/grub/loopback.cfg (if present)
+  ansible.builtin.command: >-
+    xorriso -osirrox on
+    -indev {{ autoin_ubuntu_target_dir }}/noble-live-server-{{ autoin_ubuntu_iso_arch }}.iso
+    -extract /boot/grub/loopback.cfg {{ autoin_ubuntu_target_dir }}/work/loopback.cfg
+  register: autoin_ubuntu_extract_loopback
+  failed_when: false
+  changed_when: autoin_ubuntu_extract_loopback.rc == 0
+
+- name: Extract /EFI/BOOT/grub.cfg (if present)
+  ansible.builtin.command: >-
+    xorriso -osirrox on
+    -indev {{ autoin_ubuntu_target_dir }}/noble-live-server-{{ autoin_ubuntu_iso_arch }}.iso
+    -extract /EFI/BOOT/grub.cfg {{ autoin_ubuntu_target_dir }}/work/efi_grub.cfg
+  register: autoin_ubuntu_extract_efi_grub
+  failed_when: false
+  changed_when: autoin_ubuntu_extract_efi_grub.rc == 0
+
+- name: Extract /isolinux/txt.cfg (if present)
+  ansible.builtin.command: >-
+    xorriso -osirrox on
+    -indev {{ autoin_ubuntu_target_dir }}/noble-live-server-{{ autoin_ubuntu_iso_arch }}.iso
+    -extract /isolinux/txt.cfg {{ autoin_ubuntu_target_dir }}/work/txt.cfg
+  register: autoin_ubuntu_extract_isolinux
+  failed_when: false
+  changed_when: autoin_ubuntu_extract_isolinux.rc == 0
+
+- name: Insert autoinstall before --- in grub.cfg
+  ansible.builtin.replace:
+    path: "{{ autoin_ubuntu_target_dir }}/work/grub.cfg"
+    regexp: '(?m)^(\s*linux\s+.*)\s+---\s*$'
+    replace: '\1 autoinstall ---'
+
+- name: Insert autoinstall before --- in loopback.cfg (if present)
+  ansible.builtin.replace:
+    path: "{{ autoin_ubuntu_target_dir }}/work/loopback.cfg"
+    regexp: '(?m)^(\s*linux\s+.*)\s+---\s*$'
+    replace: '\1 autoinstall ---'
+  when: autoin_ubuntu_extract_loopback.rc == 0
+
+- name: Insert autoinstall before --- in isolinux txt.cfg (if present)
+  ansible.builtin.replace:
+    path: "{{ autoin_ubuntu_target_dir }}/work/txt.cfg"
+    regexp: '(?m)^(\s*append\s+.*)\s+---\s*$'
+    replace: '\1 autoinstall ---'
+  when: autoin_ubuntu_extract_isolinux.rc == 0
+
+- name: Build new ISO (patched boot configs + autoinstall.yaml)
+  ansible.builtin.command: >-
+    xorriso
+    -indev {{ autoin_ubuntu_target_dir }}/noble-live-server-{{ autoin_ubuntu_iso_arch }}.iso
+    -outdev {{ autoin_ubuntu_target_dir }}/ubuntu_autoinstall_{{ autoin_ubuntu_iso_arch }}.iso
+    -boot_image any replay
+    -map {{ autoin_ubuntu_target_dir }}/work/autoinstall.yaml /autoinstall.yaml
+    -map {{ autoin_ubuntu_target_dir }}/work/grub.cfg /boot/grub/grub.cfg
+    {% if autoin_ubuntu_extract_loopback.rc == 0 %}-map {{ autoin_ubuntu_target_dir }}/work/loopback.cfg /boot/grub/loopback.cfg{% endif %}
+    {% if autoin_ubuntu_extract_efi_grub.rc == 0 %}-map {{ autoin_ubuntu_target_dir }}/work/efi_grub.cfg /EFI/BOOT/grub.cfg{% endif %}
+    {% if autoin_ubuntu_extract_isolinux.rc == 0 %}-map {{ autoin_ubuntu_target_dir }}/work/txt.cfg /isolinux/txt.cfg{% endif %}
+  changed_when: true
+
+- name: Delete work dir
+  ansible.builtin.file:
+    path: "{{ autoin_ubuntu_target_dir }}/work"
+    state: absent

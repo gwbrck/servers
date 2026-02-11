@@ -1,0 +1,20 @@
+autoin_ubuntu_locale: "de_DE.UTF-8"
+
+autoin_ubuntu_keyboard_layout: "de"
+autoin_ubuntu_timezone: "Europe/Berlin"
+
+autoin_ubuntu_iso_arch: "amd64"
+# Valid values are: amd64, arm64
+# ppc64el and s390x haven't been tested yet
+
+autoin_ubuntu_hostname: "homeeins-1"
+autoin_ubuntu_password: "{{ sops.mydefaults.password | default('ubuntu', true) }}"
+autoin_ubuntu_password_hash: "{{ sops.mydefaults.password_hashed | default(password | password_hash('sha512'), true) }}"
+
+autoin_ubuntu_username: "{{ sops.mydefaults.username | default('ubuntu', true) }}"
+
+autoin_ubuntu_ssh_public_key: "{{ sops.mydefaults.public_ssh_key | default('', true) }}"
+
+autoin_ubuntu_target_dir: "{{ ansible_facts.env.HOME }}/.local/ansible_ubuntu-autoinstall"
+
+autoin_ubuntu_ubuntu_gpg_key: "843938DF228D22F7B3742BC0D94AA3F0EFE21092"

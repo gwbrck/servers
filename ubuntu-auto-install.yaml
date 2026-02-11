@@ -21,4 +21,4 @@
     sops: "{{ hostvars['localhost'].sops_data }}"
     ansible_python_interpreter: "{{ ansible_playbook_python }}"
   roles:
-    - role: ansible-role-ubuntu_autoinstall
+    - role: autoin_ubuntu

@@ -1,15 +1,14 @@
----
 - name: Verify Proxmox base ISO exists
   ansible.builtin.stat:
     path: "{{ autoin_proxmox_iso_source_path }}"
-  register: proxmox_iso_source_stat
+  register: autoin_proxmox_iso_source_stat
 
 - name: Abort when Proxmox base ISO is unavailable
   ansible.builtin.fail:
     msg: >-
       Proxmox base ISO not found at {{ autoin_proxmox_iso_source_path }}. Download the official ISO
       and update autoin_proxmox_iso_source_path accordingly.
-  when: not proxmox_iso_source_stat.stat.exists
+  when: not autoin_proxmox_iso_source_stat.stat.exists
 
 - name: Prepare Proxmox ISO workspace directories
   ansible.builtin.file:
@@ -69,28 +68,28 @@
         /iso/base.iso;"
     tty: true
     detach: false
-  register: proxmox_iso_build
+  register: autoin_proxmox_iso_build
   no_log: true
 
 - name: Remove build container after result collection
   community.docker.docker_container:
     name: autoin-proxmox-iso-build
     state: absent
-  when: proxmox_iso_build is not failed
+  when: autoin_proxmox_iso_build is not failed
 
 - name: Check for generated Proxmox ISO artifact
   ansible.builtin.stat:
     path: "{{ autoin_proxmox_iso_workdir }}/proxmox-auto-install.iso"
-  register: proxmox_iso_artifact
+  register: autoin_proxmox_iso_artifact
 
 - name: Show ISO build command output
   ansible.builtin.debug:
     msg:
-      - "Container stdout:\n{{ proxmox_iso_build.stdout | default('<no stdout>', true) }}"
-      - "Container stderr:\n{{ proxmox_iso_build.stderr | default('<no stderr>', true) }}"
+      - "Container stdout:\n{{ autoin_proxmox_iso_build.stdout | default('<no stdout>', true) }}"
+      - "Container stderr:\n{{ autoin_proxmox_iso_build.stderr | default('<no stderr>', true) }}"
     no_log: true
   when:
-    - not proxmox_iso_artifact.stat.exists
+    - not autoin_proxmox_iso_artifact.stat.exists
 
 - name: Abort when Proxmox ISO artifact is missing
   ansible.builtin.fail:
@@ -98,7 +97,7 @@
       Expected ISO at {{ autoin_proxmox_iso_workdir }}/proxmox-auto-install.iso but it was not created.
       Review the container output above for details.
   when:
-    - not proxmox_iso_artifact.stat.exists
+    - not autoin_proxmox_iso_artifact.stat.exists
 
 - name: Remove sensitive Proxmox build artifacts
   ansible.builtin.file:
@@ -111,7 +110,7 @@
   loop_control:
     label: "{{ item | basename }}"
   when:
-    - proxmox_iso_artifact.stat.exists
+    - autoin_proxmox_iso_artifact.stat.exists
 
 - name: Show ISO build results summary
   ansible.builtin.debug:
