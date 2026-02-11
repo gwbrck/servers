@@ -1,22 +1,24 @@
 ---
-resticprofile_target_bin: "/usr/local/bin"
-resticprofile_temp_dir: "/var/tmp/ansible"
-resticprofile_venv_dir: "/var/tmp/venv"
-resticprofile_config_dir: "/opt/resticprofile"
-resticprofile_config_file: "{{ resticprofile_config_dir }}/profiles.yaml"
-resticprofile_env_file: "{{ resticprofile_config_dir }}/restic.env"
+# Pfade auf dem Host-System
+restic_backup_target_bin: "/usr/local/bin"
+restic_backup_temp_dir: "/var/tmp/ansible"
+restic_backup_venv_dir: "/var/tmp/venv"
+restic_backup_config_dir: "/opt/resticprofile"
+restic_backup_config_file: "{{ restic_backup_config_dir }}/profiles.yaml"
+restic_backup_env_file: "{{ restic_backup_config_dir }}/restic.env"
 
-restic_arch_map:
+restic_backup_arch_map:
   x86_64: "linux_amd64"
   amd64: "linux_amd64"
   aarch64: "linux_arm64"
   armv7l: "linux_armv7"
   armv6l: "linux_armv6"
-restic_arch: "{{ restic_arch_map[ansible_architecture] | default('linux_amd64') }}"
+restic_backup_arch: "{{ restic_backup_arch_map[ansible_architecture] | default('linux_amd64') }}"
 
-restic_s3_endpoint: "{{ sops.s3_hetzner.s3_endpoint | default('fsn1.your-objectstorage.com', true) }}"
-restic_s3_bucket: "{{ sops.s3_hetzner.s3_bucket | default('your-bucket', true) }}"
-restic_s3_region: "{{ sops.s3_hetzner.s3_region | default('fsn1', true) }}"
-restic_s3_access_key: "{{ sops.s3_hetzner.access_key | default('', true) }}"
-restic_s3_secret_key: "{{ sops.s3_hetzner.secret_key | default('', true) }}"
-restic_password: "{{ sops.s3_hetzner.restic_pw | default('', true) }}"
+# S3-Konfiguration
+restic_backup_s3_endpoint: "{{ sops.s3_hetzner.s3_endpoint | default('fsn1.your-objectstorage.com', true) }}"
+restic_backup_s3_bucket: "{{ sops.s3_hetzner.s3_bucket | default('your-bucket', true) }}"
+restic_backup_s3_region: "{{ sops.s3_hetzner.s3_region | default('fsn1', true) }}"
+restic_backup_s3_access_key: "{{ sops.s3_hetzner.access_key | default('', true) }}"
+restic_backup_s3_secret_key: "{{ sops.s3_hetzner.secret_key | default('', true) }}"
+restic_backup_password: "{{ sops.s3_hetzner.restic_pw | default('', true) }}"

@@ -26,9 +26,9 @@
 - name: Create and start services
   community.docker.docker_compose_v2:
     project_src: "{{ ntfy_compose_dir }}"
-  register: output
+  register: ntfy_output
 
 - name: Show results
   ansible.builtin.debug:
-    var: output
+    var: ntfy_output
     verbosity: 1

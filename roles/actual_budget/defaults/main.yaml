@@ -1,14 +1,14 @@
 ---
 # Pfade auf dem Host-System
-actual_compose_dir: "/opt/actual_budget"
-actual_compose_file: "docker-compose.yaml"
-actual_data_dir: "/srv/service_data/actual"
-actual_server_files_dir: "{{ actual_data_dir }}/server-files"
-actual_user_files_dir: "{{ actual_data_dir }}/user-files"
+actual_budget_compose_dir: "/opt/actual_budget"
+actual_budget_compose_file: "docker-compose.yaml"
+actual_budget_data_dir: "/srv/service_data/actual"
+actual_budget_server_files_dir: "{{ actual_budget_data_dir }}/server-files"
+actual_budget_user_files_dir: "{{ actual_budget_data_dir }}/user-files"
 
 # Traefik / Netzwerk Einstellungen
-actual_public_url: "budget.home.wbrck.de"
-actual_traefik_enable: true
-actual_traefik_router_name: "actual"
-actual_traefik_cert_resolver: "{{ sops.proxy.cert_resolver | default('dnshetzner', true) }}"
-actual_traefik_network: "{{ sops.proxy.network_name | default('traefik-net', true) }}"
+actual_budget_public_url: "budget.home.wbrck.de"
+actual_budget_traefik_enable: true
+actual_budget_traefik_router_name: "actual"
+actual_budget_traefik_cert_resolver: "{{ sops.proxy.cert_resolver | default('dnshetzner', true) }}"
+actual_budget_traefik_network: "{{ sops.proxy.network_name | default('traefik-net', true) }}"

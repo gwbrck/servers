@@ -43,9 +43,9 @@
 - name: Create and start services
   community.docker.docker_compose_v2:
     project_src: "{{ opencloud_compose_dir }}"
-  register: output
+  register: opencloud_output
 
 - name: Show results
   ansible.builtin.debug:
-    var: output
+    var: opencloud_output
     verbosity: 1

@@ -35,9 +35,9 @@
 - name: Create and start services
   community.docker.docker_compose_v2:
     project_src: "{{ vaultwarden_compose_dir }}"
-  register: output
+  register: vaultwarden_output
 
 - name: Show results
   ansible.builtin.debug:
-    var: output
+    var: vaultwarden_output
     verbosity: 1

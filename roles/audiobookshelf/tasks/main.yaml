@@ -29,9 +29,9 @@
 - name: Create and start services
   community.docker.docker_compose_v2:
     project_src: "{{ audiobookshelf_compose_dir }}"
-  register: output
+  register: audiobookshelf_output
 
 - name: Show results
   ansible.builtin.debug:
-    var: output
+    var: audiobookshelf_output
     verbosity: 1

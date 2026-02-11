@@ -37,9 +37,9 @@ groups:
 
 profiles:
   default:
-    repository: "s3:https://{{ restic_s3_endpoint }}/{{ restic_s3_bucket }}"
+    repository: "s3:https://{{ restic_backup_s3_endpoint }}/{{ restic_backup_s3_bucket }}"
     initialize: true
-    env-file: "{{ resticprofile_env_file }}"
+    env-file: "{{ restic_backup_env_file }}"
     status-file: backup-status.json
     retention:
       keep-daily: 7

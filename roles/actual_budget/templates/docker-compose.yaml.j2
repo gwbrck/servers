@@ -4,22 +4,22 @@ services:
     container_name: "actual_budget"
     restart: unless-stopped
     volumes:
-      - "{{ actual_data_dir }}:/data"
+      - "{{ actual_budget_data_dir }}:/data"
     environment:
       ACTUAL_DATA_DIR: /data
       ACTUAL_SERVER_FILES: /data/server-files
       ACTUAL_USER_FILES: /data/user-files
     labels:
-      - "traefik.enable={{ actual_traefik_enable | default(true) | ternary('true', 'false') }}"
-      - "traefik.docker.network={{ actual_traefik_network }}"
-      - "traefik.http.routers.{{ actual_traefik_router_name }}.rule=Host(`{{ actual_public_url }}`)"
-      - "traefik.http.routers.{{ actual_traefik_router_name }}.entrypoints=websecure"
-      - "traefik.http.routers.{{ actual_traefik_router_name }}.tls.certresolver={{ actual_traefik_cert_resolver }}"
-      - "traefik.http.services.{{ actual_traefik_router_name }}.loadbalancer.server.port=5006"
+      - "traefik.enable={{ actual_budget_traefik_enable | default(true) | ternary('true', 'false') }}"
+      - "traefik.docker.network={{ actual_budget_traefik_network }}"
+      - "traefik.http.routers.{{ actual_budget_traefik_router_name }}.rule=Host(`{{ actual_budget_public_url }}`)"
+      - "traefik.http.routers.{{ actual_budget_traefik_router_name }}.entrypoints=websecure"
+      - "traefik.http.routers.{{ actual_budget_traefik_router_name }}.tls.certresolver={{ actual_budget_traefik_cert_resolver }}"
+      - "traefik.http.services.{{ actual_budget_traefik_router_name }}.loadbalancer.server.port=5006"
     networks:
-      - "{{ actual_traefik_network }}"
+      - "{{ actual_budget_traefik_network }}"
 
 networks:
-  {{ actual_traefik_network }}:
-    name: {{ actual_traefik_network }}
+  {{ actual_budget_traefik_network }}:
+    name: {{ actual_budget_traefik_network }}
     external: true
