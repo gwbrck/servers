@@ -1,15 +1,15 @@
 ---
 # Pfade auf dem Host-System
 ntfy_compose_dir: "/opt/ntfy"
-ntfy_compose_file: "docker-compose.yaml"
+ntfy_compose_file: "{{ default_compose_file }}"
 ntfy_data_dir: "/srv/service_data/ntfy"
 
 # Zeitzone
-ntfy_timezone: "Europe/Berlin"
+ntfy_timezone: "{{ default_timezone }}"
 
 # Traefik / Netzwerk Einstellungen
 ntfy_public_url: "ntfy.home.wbrck.de"
 ntfy_traefik_enable: true
 ntfy_traefik_router_name: "ntfy"
-ntfy_traefik_cert_resolver: "{{ sops.proxy.cert_resolver | default('dnshetzner', true) }}"
-ntfy_traefik_network: "{{ sops.proxy.network_name | default('traefik-net', true) }}"
+ntfy_traefik_cert_resolver: "{{ traefik_cert_resolver }}"
+ntfy_traefik_network: "{{ traefik_network }}"

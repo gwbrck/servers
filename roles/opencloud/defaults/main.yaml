@@ -1,6 +1,6 @@
 # Pfade auf dem Host-System
 opencloud_compose_dir: "/opt/opencloud"
-opencloud_compose_file: "docker-compose.yaml"
+opencloud_compose_file: "{{ default_compose_file }}"
 opencloud_config_dir: "/srv/service_data/opencloud/config"
 opencloud_data_dir: "/srv/service_data/opencloud/data"
 
@@ -16,5 +16,5 @@ opencloud_admin_password: "{{ sops.opencloud.admin_password }}"
 # Traefik / Netzwerk Einstellungen
 opencloud_traefik_enable: true
 opencloud_traefik_router_name: "opencloud"
-opencloud_traefik_cert_resolver: "{{ sops.proxy.cert_resolver | default('dnshetzner', true) }}"
-opencloud_traefik_network: "{{ sops.proxy.network_name | default('traefik-net', true) }}"
+opencloud_traefik_cert_resolver: "{{ traefik_cert_resolver }}"
+opencloud_traefik_network: "{{ traefik_network }}"

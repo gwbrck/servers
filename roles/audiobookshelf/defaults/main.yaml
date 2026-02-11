@@ -1,7 +1,7 @@
 ---
 # Pfade auf dem Host-System
 audiobookshelf_compose_dir: "/opt/audiobookshelf"
-audiobookshelf_compose_file: "docker-compose.yaml"
+audiobookshelf_compose_file: "{{ default_compose_file }}"
 audiobookshelf_data_dir: "/srv/service_data/audiobookshelf"
 audiobookshelf_audiobooks_dir: "{{ audiobookshelf_data_dir }}/audiobooks"
 audiobookshelf_podcasts_dir: "{{ audiobookshelf_data_dir }}/podcasts"
@@ -9,11 +9,11 @@ audiobookshelf_config_dir: "{{ audiobookshelf_data_dir }}/config"
 audiobookshelf_metadata_dir: "{{ audiobookshelf_data_dir }}/metadata"
 
 # Zeitzone
-audiobookshelf_timezone: "Europe/Berlin"
+audiobookshelf_timezone: "{{ default_timezone }}"
 
 # Traefik / Netzwerk Einstellungen
 audiobookshelf_public_url: "audio.home.wbrck.de"
 audiobookshelf_traefik_enable: true
-audiobookshelf_traefik_network: "{{ sops.proxy.network_name | default('traefik-net', true) }}"
+audiobookshelf_traefik_network: "{{ traefik_network }}"
 audiobookshelf_traefik_router_name: "audiobookshelf"
-audiobookshelf_traefik_cert_resolver: "{{ sops.proxy.cert_resolver | default('dnshetzner', true) }}"
+audiobookshelf_traefik_cert_resolver: "{{ traefik_cert_resolver }}"

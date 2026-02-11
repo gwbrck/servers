@@ -1,6 +1,6 @@
 ---
 traefik_compose_dir: "/opt/traefik"
-traefik_compose_file: "docker-compose.yaml"
+traefik_compose_file: "{{ default_compose_file }}"
 
 traefik_env_file: "{{ traefik_compose_dir }}/.env"
 traefik_data_dir: "{{ traefik_compose_dir }}/data"
@@ -8,10 +8,9 @@ traefik_acme_file: "{{ traefik_data_dir }}/acme.json"
 traefik_acme_storage_path: "/letsencrypt/acme.json"
 traefik_image: "traefik:latest"
 traefik_container_name: "traefik"
-traefik_traefik_network: "{{ sops.proxy.network_name | default('traefik-net', true) }}"
+traefik_traefik_network: "{{ traefik_network }}"
 traefik_log_level: "INFO"
 
-traefik_cert_resolver: "{{ sops.proxy.cert_resolver | default('dnshetzner', true) }}"
 traefik_dns_provider: "hetzner"
 traefik_dns_resolvers:
   - "1.1.1.1:53"
