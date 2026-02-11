@@ -14,6 +14,7 @@ groups:
       - opencloud
       - audiobookshelf
       - archiv_gregor
+      - freshrss
     schedules:
       backup:
         at: "*-*-* 03:30:00"
@@ -28,6 +29,7 @@ groups:
       - opencloud
       - audiobookshelf
       - archiv_gregor
+      - freshrss
     schedules:
       check:
         at: "Sun *-*-* 04:30:00"
@@ -192,3 +194,13 @@ profiles:
     backup:
       source:
         - "/srv/archiv_gregor"
+
+  freshrss:
+    inherit: default
+    run-before:
+      - "docker compose -f /opt/freshrss/docker-compose.yaml stop freshrss"
+    run-after:
+      - "docker compose -f /opt/freshrss/docker-compose.yaml start freshrss"
+    backup:
+      source:
+        - "/srv/service_data/freshrss"

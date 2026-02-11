@@ -1,0 +1,23 @@
+---
+# Pfade auf dem Host-System
+freshrss_compose_dir: "/opt/freshrss"
+freshrss_compose_file: "docker-compose.yaml"
+freshrss_data_dir: "/srv/service_data/freshrss/data"
+freshrss_extensions_dir: "/srv/service_data/freshrss/extensions"
+
+# Zeitzone
+freshrss_timezone: "Europe/Berlin"
+
+# FreshRSS Einstellungen
+freshrss_cron_min: "*/15"
+
+# xExtension-Readable
+freshrss_readable_extension_repo: "https://github.com/printfuck/xExtension-Readable.git"
+freshrss_readable_extension_version: "HEAD"
+
+# Traefik / Netzwerk Einstellungen
+freshrss_public_url: "{{ sops.freshrss.domain }}"
+freshrss_traefik_enable: true
+freshrss_traefik_network: "{{ sops.proxy.network_name | default('traefik-net', true) }}"
+freshrss_traefik_router_name: "freshrss"
+freshrss_traefik_cert_resolver: "{{ sops.proxy.cert_resolver | default('dnshetzner', true) }}"
