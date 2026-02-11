@@ -2,7 +2,7 @@
   hosts: localhost
   gather_facts: false
   vars:
-    sops_file: "{{ lookup('env', 'HOME') }}/Documents/Dots/server_infra.yaml"
+    sops_file: "{{ lookup('env', 'HOME') }}/OpenCloud/Dots/server_infra.yaml"
   tasks:
     - name: Read SOPS secrets
       no_log: true
