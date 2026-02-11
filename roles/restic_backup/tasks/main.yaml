@@ -131,6 +131,7 @@
   ansible.builtin.command: "install {{ resticprofile_temp_dir }}/resticprofile {{ resticprofile_target_bin }}/"
   when: install_resticprofile
   changed_when: true
+  notify: Register resticprofile schedules
 
 - name: Ensures resticprofile configuration directory exists
   ansible.builtin.file:
@@ -143,6 +144,7 @@
     src: restic.env.j2
     dest: "{{ resticprofile_env_file }}"
     mode: "0400"
+  notify: Register resticprofile schedules
 
 - name: Write resticprofile config
   ansible.builtin.template:
@@ -150,6 +152,7 @@
     src: profiles.yaml.j2
     dest: "{{ resticprofile_config_file }}"
     mode: "0400"
+  notify: Register resticprofile schedules
 
 - name: Install other resticprofile files (like excludes)
   ansible.builtin.copy:
@@ -171,10 +174,6 @@
     mode: "0400"
   with_fileglob:
     - "../resticprofile/{{ inventory_hostname }}/keys/*"
-
-- name: Register resticprofile schedules
-  ansible.builtin.command: "{{ resticprofile_target_bin }}/resticprofile -c {{ resticprofile_config_file }} schedule --all"
-  changed_when: true
 
 - name: Remove temp directory
   ansible.builtin.file:
