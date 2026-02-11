@@ -24,7 +24,6 @@
   become: true
   gather_facts: true
   vars:
-    sops: "{{ hostvars['localhost'].sops_data }}"
     security_sudoers_passwordless:
       - "{{ ansible_user }}"
     security_ssh_port: 6861
@@ -50,8 +49,6 @@
   become: true
   gather_facts: true
   tags: [tailscale]
-  vars:
-    sops: "{{ hostvars['localhost'].sops_data }}"
   pre_tasks:
     - name: Ensure IP forwarding sysctl settings
       ansible.posix.sysctl:
@@ -86,8 +83,6 @@
   hosts: homeeins-1
   become: true
   tags: [traefik]
-  vars:
-    sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
     - traefik
 
@@ -95,8 +90,6 @@
   hosts: homeeins-1
   become: true
   tags: [vaultwarden]
-  vars:
-    sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
     - vaultwarden
 
@@ -104,8 +97,6 @@
   hosts: homeeins-1
   become: true
   tags: [audiobookshelf]
-  vars:
-    sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
     - audiobookshelf
 
@@ -113,8 +104,6 @@
   hosts: homeeins-1
   become: true
   tags: [ntfy]
-  vars:
-    sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
     - ntfy
 
@@ -122,8 +111,6 @@
   hosts: homeeins-1
   become: true
   tags: [opencloud]
-  vars:
-    sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
     - opencloud
 
@@ -131,8 +118,6 @@
   hosts: homeeins-1
   become: true
   tags: [actual_budget]
-  vars:
-    sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
     - actual_budget
 
@@ -140,8 +125,6 @@
   hosts: homeeins-1
   become: true
   tags: [freshrss]
-  vars:
-    sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
     - freshrss
 
@@ -149,7 +132,5 @@
   hosts: homeeins-1
   become: true
   tags: [restic_backup]
-  vars:
-    sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
     - restic_backup
