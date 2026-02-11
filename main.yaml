@@ -36,9 +36,12 @@
     security_autoupdate_reboot_time: "04:00"
     security_fail2ban_enabled: true
   roles:
-    - geerlingguy.security
-    - mydefaults
-    - geerlingguy.docker
+    - role: geerlingguy.security
+      tags: [defaults, security]
+    - role: mydefaults
+      tags: [defaults]
+    - role: geerlingguy.docker
+      tags: [defaults, docker]
 
 - name: Tailscale
   hosts:
@@ -46,6 +49,7 @@
     - homeeins-1
   become: true
   gather_facts: true
+  tags: [tailscale]
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
   pre_tasks:
@@ -81,6 +85,7 @@
 - name: Setup Traefik
   hosts: homeeins-1
   become: true
+  tags: [traefik]
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
@@ -89,6 +94,7 @@
 - name: Setup vaultwarden
   hosts: homeeins-1
   become: true
+  tags: [vaultwarden]
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
@@ -97,6 +103,7 @@
 - name: Setup audiobookshelf
   hosts: homeeins-1
   become: true
+  tags: [audiobookshelf]
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
@@ -105,6 +112,7 @@
 - name: Setup ntfy
   hosts: homeeins-1
   become: true
+  tags: [ntfy]
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
@@ -113,6 +121,7 @@
 - name: Setup OpenCloud
   hosts: homeeins-1
   become: true
+  tags: [opencloud]
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
@@ -121,6 +130,7 @@
 - name: Setup Actual
   hosts: homeeins-1
   become: true
+  tags: [actual_budget]
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
@@ -129,6 +139,7 @@
 - name: Setup FreshRSS
   hosts: homeeins-1
   become: true
+  tags: [freshrss]
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
@@ -137,6 +148,7 @@
 - name: Setup restic backups
   hosts: homeeins-1
   become: true
+  tags: [restic_backup]
   vars:
     sops: "{{ hostvars['localhost'].sops_data }}"
   roles:
