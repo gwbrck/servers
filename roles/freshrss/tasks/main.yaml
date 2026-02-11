@@ -43,9 +43,9 @@
 - name: Create and start services
   community.docker.docker_compose_v2:
     project_src: "{{ freshrss_compose_dir }}"
-  register: output
+  register: freshrss_output
 
 - name: Show results
   ansible.builtin.debug:
-    var: output
+    var: freshrss_output
     verbosity: 1

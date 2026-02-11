@@ -6,3 +6,7 @@ skip_list:
   - name[missing]
   - no-changed-when
   - risky-file-permissions
+
+exclude_paths:
+  - roles/ansible-role-ubuntu_autoinstall/
+  - roles/autoin_proxmox/

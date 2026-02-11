@@ -11,138 +11,143 @@
 - name: Install python dependencies
   ansible.builtin.pip:
     name: github3.py
-    virtualenv: "{{ resticprofile_venv_dir }}"
+    virtualenv: "{{ restic_backup_venv_dir }}"
     virtualenv_command: python3 -m venv
 
 - name: Check if restic is installed
   ansible.builtin.stat:
-    path: "{{ resticprofile_target_bin }}/restic"
-  register: restic_bin
+    path: "{{ restic_backup_target_bin }}/restic"
+  register: restic_backup_bin
 
 - name: Register restic installation needed
   ansible.builtin.set_fact:
-    install_restic: "{{ not restic_bin.stat.exists }}"
+    restic_backup_install_restic: "{{ not restic_backup_bin.stat.exists }}"
 
 - name: Check restic installed version
   ansible.builtin.command: restic version
-  register: restic_current
-  when: restic_bin.stat.exists
+  register: restic_backup_current
+  when: restic_backup_bin.stat.exists
   changed_when: false
 
 - name: Get latest release of restic
   vars:
-    ansible_python_interpreter: "{{ resticprofile_venv_dir }}/bin/python3"
+    ansible_python_interpreter: "{{ restic_backup_venv_dir }}/bin/python3"
   community.general.github_release:
     user: restic
     repo: restic
     action: latest_release
     token: "{{ github_token | default(omit) }}"
-  register: restic_version
+  register: restic_backup_version
 
 - name: Compare restic versions
   ansible.builtin.set_fact:
-    install_restic: "{{ restic_version.tag != restic_current_version }}"
+    restic_backup_install_restic: "{{ restic_backup_version.tag != restic_backup_current_parsed }}"
   vars:
-    restic_current_version: "{{ restic_current.stdout | regex_replace('^restic (\\d+\\.\\d+\\.\\d+) .+$', 'v\\1') }}"
-  when: restic_bin.stat.exists
+    restic_backup_current_parsed: "{{ restic_backup_current.stdout | regex_replace('^restic (\\d+\\.\\d+\\.\\d+) .+$', 'v\\1') }}"
+  when: restic_backup_bin.stat.exists
 
 - name: Check if resticprofile is installed
   ansible.builtin.stat:
-    path: "{{ resticprofile_target_bin }}/resticprofile"
-  register: resticprofile_bin
+    path: "{{ restic_backup_target_bin }}/resticprofile"
+  register: restic_backup_profile_bin
 
 - name: Register resticprofile installation needed
   ansible.builtin.set_fact:
-    install_resticprofile: "{{ not resticprofile_bin.stat.exists }}"
+    restic_backup_install_profile: "{{ not restic_backup_profile_bin.stat.exists }}"
 
 - name: Check resticprofile installed version
   ansible.builtin.command: resticprofile version
-  register: resticprofile_current
-  when: resticprofile_bin.stat.exists
+  register: restic_backup_profile_current
+  when: restic_backup_profile_bin.stat.exists
   changed_when: false
   failed_when: false
 
 - name: Get latest release of resticprofile
   vars:
-    ansible_python_interpreter: "{{ resticprofile_venv_dir }}/bin/python3"
+    ansible_python_interpreter: "{{ restic_backup_venv_dir }}/bin/python3"
   community.general.github_release:
     user: creativeprojects
     repo: resticprofile
     action: latest_release
     token: "{{ github_token | default(omit) }}"
-  register: resticprofile_version
+  register: restic_backup_profile_version
 
 - name: Compare resticprofile versions
   ansible.builtin.set_fact:
-    install_resticprofile: "{{ resticprofile_version.tag != resticprofile_current_version }}"
+    restic_backup_install_profile: "{{ restic_backup_profile_version.tag != restic_backup_profile_current_parsed }}"
   vars:
-    resticprofile_current_version: "{{ resticprofile_current.stdout | regex_replace('^resticprofile version (\\d+\\.\\d+\\.\\d+) .+$', 'v\\1') }}"
-  when: resticprofile_bin.stat.exists
+    restic_backup_profile_current_parsed: >-
+      {{ restic_backup_profile_current.stdout | regex_replace('^resticprofile version (\d+\.\d+\.\d+) .+$', 'v\1') }}
+  when: restic_backup_profile_bin.stat.exists
 
 - name: Remove temp directory
   ansible.builtin.file:
-    path: "{{ resticprofile_temp_dir }}"
+    path: "{{ restic_backup_temp_dir }}"
     state: absent
-  when: install_restic or install_resticprofile
+  when: restic_backup_install_restic or restic_backup_install_profile
 
 - name: Create a temp directory if it does not exist
   ansible.builtin.file:
-    path: "{{ resticprofile_temp_dir }}"
+    path: "{{ restic_backup_temp_dir }}"
     state: directory
     mode: "0755"
-  when: install_restic or install_resticprofile
+  when: restic_backup_install_restic or restic_backup_install_profile
 
 - name: Download restic
-  ansible.builtin.get_url:
-    url: "https://github.com/restic/restic/releases/download/{{ restic_version.tag }}/restic_{{ restic_version_number }}_{{ restic_arch }}.bz2"
-    dest: "{{ resticprofile_temp_dir }}/restic.bz2"
-    mode: "0640"
   vars:
-    restic_version_number: "{{ restic_version.tag | regex_replace('^v(.*)$', '\\1') }}"
-  when: install_restic
+    restic_backup_version_number: "{{ restic_backup_version.tag | regex_replace('^v(.*)$', '\\1') }}"
+    restic_backup_download_url: >-
+      https://github.com/restic/restic/releases/download/{{ restic_backup_version.tag }}/restic_{{ restic_backup_version_number }}_{{ restic_backup_arch }}.bz2
+  ansible.builtin.get_url:
+    url: "{{ restic_backup_download_url }}"
+    dest: "{{ restic_backup_temp_dir }}/restic.bz2"
+    mode: "0640"
+  when: restic_backup_install_restic
 
 - name: Extract restic
-  ansible.builtin.command: "bunzip2 {{ resticprofile_temp_dir }}/restic.bz2"
-  when: install_restic
+  ansible.builtin.command: "bunzip2 {{ restic_backup_temp_dir }}/restic.bz2"
+  when: restic_backup_install_restic
   changed_when: true
 
 - name: Install restic
-  ansible.builtin.command: "install {{ resticprofile_temp_dir }}/restic {{ resticprofile_target_bin }}/"
-  when: install_restic
+  ansible.builtin.command: "install {{ restic_backup_temp_dir }}/restic {{ restic_backup_target_bin }}/"
+  when: restic_backup_install_restic
   changed_when: true
 
 - name: Download resticprofile
-  ansible.builtin.get_url:
-    url: "https://github.com/creativeprojects/resticprofile/releases/download/{{ resticprofile_version.tag }}/resticprofile_{{ resticprofile_version_number }}_{{ restic_arch }}.tar.gz"
-    dest: "{{ resticprofile_temp_dir }}/resticprofile.tar.gz"
-    mode: "0640"
   vars:
-    resticprofile_version_number: "{{ resticprofile_version.tag | regex_replace('^v(.*)$', '\\1') }}"
-  when: install_resticprofile
+    restic_backup_rp_ver: "{{ restic_backup_profile_version.tag | regex_replace('^v(.*)$', '\\1') }}"
+    restic_backup_rp_base: "https://github.com/creativeprojects/resticprofile/releases/download"
+    restic_backup_rp_tag: "{{ restic_backup_profile_version.tag }}"
+  ansible.builtin.get_url:
+    url: "{{ restic_backup_rp_base }}/{{ restic_backup_rp_tag }}/resticprofile_{{ restic_backup_rp_ver }}_{{ restic_backup_arch }}.tar.gz"
+    dest: "{{ restic_backup_temp_dir }}/resticprofile.tar.gz"
+    mode: "0640"
+  when: restic_backup_install_profile
 
 - name: Extract resticprofile.tgz
   ansible.builtin.unarchive:
-    src: "{{ resticprofile_temp_dir }}/resticprofile.tar.gz"
-    dest: "{{ resticprofile_temp_dir }}/"
+    src: "{{ restic_backup_temp_dir }}/resticprofile.tar.gz"
+    dest: "{{ restic_backup_temp_dir }}/"
     remote_src: true
-  when: install_resticprofile
+  when: restic_backup_install_profile
 
 - name: Install resticprofile
-  ansible.builtin.command: "install {{ resticprofile_temp_dir }}/resticprofile {{ resticprofile_target_bin }}/"
-  when: install_resticprofile
+  ansible.builtin.command: "install {{ restic_backup_temp_dir }}/resticprofile {{ restic_backup_target_bin }}/"
+  when: restic_backup_install_profile
   changed_when: true
   notify: Register resticprofile schedules
 
 - name: Ensures resticprofile configuration directory exists
   ansible.builtin.file:
-    path: "{{ resticprofile_config_dir }}"
+    path: "{{ restic_backup_config_dir }}"
     state: directory
     mode: "0700"
 
 - name: Write resticprofile env file
   ansible.builtin.template:
     src: restic.env.j2
-    dest: "{{ resticprofile_env_file }}"
+    dest: "{{ restic_backup_env_file }}"
     mode: "0400"
   notify: Register resticprofile schedules
 
@@ -150,14 +155,14 @@
   ansible.builtin.template:
     backup: true
     src: profiles.yaml.j2
-    dest: "{{ resticprofile_config_file }}"
+    dest: "{{ restic_backup_config_file }}"
     mode: "0400"
   notify: Register resticprofile schedules
 
 - name: Install other resticprofile files (like excludes)
   ansible.builtin.copy:
     src: "{{ item }}"
-    dest: "{{ resticprofile_config_dir }}/"
+    dest: "{{ restic_backup_config_dir }}/"
     owner: root
     group: root
     mode: "0444"
@@ -167,7 +172,7 @@
 - name: Install keys
   ansible.builtin.copy:
     src: "{{ item }}"
-    dest: "{{ resticprofile_config_dir }}/"
+    dest: "{{ restic_backup_config_dir }}/"
     decrypt: true
     owner: root
     group: root
@@ -177,6 +182,6 @@
 
 - name: Remove temp directory
   ansible.builtin.file:
-    path: "{{ resticprofile_temp_dir }}"
+    path: "{{ restic_backup_temp_dir }}"
     state: absent
-  when: install_restic or install_resticprofile
+  when: restic_backup_install_restic or restic_backup_install_profile

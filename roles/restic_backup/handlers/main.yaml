@@ -1,4 +1,4 @@
 ---
 - name: Register resticprofile schedules
-  ansible.builtin.command: "{{ resticprofile_target_bin }}/resticprofile -c {{ resticprofile_config_file }} schedule --all"
+  ansible.builtin.command: "{{ restic_backup_target_bin }}/resticprofile -c {{ restic_backup_config_file }} schedule --all"
   changed_when: true
