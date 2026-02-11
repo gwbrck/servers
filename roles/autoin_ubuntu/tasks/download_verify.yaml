@@ -1,0 +1,70 @@
+---
+- name: Download the SHA256 sums
+  ansible.builtin.get_url:
+    url: "https://cdimage.ubuntu.com/ubuntu-server/noble/daily-live/current/SHA256SUMS"
+    dest: "{{ autoin_ubuntu_target_dir }}"
+    mode: "0640"
+
+- name: Get the SHA256 sum for the ISO
+  ansible.builtin.shell:
+    cmd: "set -o pipefail && grep {{ autoin_ubuntu_iso_arch }}.iso {{ autoin_ubuntu_target_dir }}/SHA256SUMS | cut -d ' ' -f1"
+    executable: /bin/bash
+  changed_when: false
+  register: autoin_ubuntu_sha256sum
+
+- name: Download the latest Ubuntu Server Noble ISO
+  ansible.builtin.get_url:
+    url: "https://cdimage.ubuntu.com/ubuntu-server/noble/daily-live/current/noble-live-server-{{ autoin_ubuntu_iso_arch }}.iso"
+    dest: "{{ autoin_ubuntu_target_dir }}/noble-live-server-{{ autoin_ubuntu_iso_arch }}.iso"
+    checksum: "sha256:{{ autoin_ubuntu_sha256sum.stdout }}"
+    mode: "0640"
+
+- name: Download the GPG keys
+  ansible.builtin.get_url:
+    url: "https://cdimage.ubuntu.com/ubuntu-server/noble/daily-live/current/SHA256SUMS.gpg"
+    dest: "{{ autoin_ubuntu_target_dir }}"
+    mode: "0640"
+
+- name: Check if dirmngr is running
+  ansible.builtin.shell:
+    cmd: pgrep dirmngr
+    executable: /bin/bash
+  failed_when: false
+  changed_when: false
+  register: autoin_ubuntu_dirmngr_status
+
+- name: Launch dirmngr if it isn't running
+  ansible.builtin.shell:
+    cmd: dirmngr --daemon
+    executable: /bin/bash
+  changed_when: true
+  when: autoin_ubuntu_dirmngr_status.rc != 0
+
+- name: Import the GPG key
+  ansible.builtin.shell:
+    cmd: >-
+      gpg -q --no-default-keyring
+      --keyring '{{ autoin_ubuntu_target_dir }}/{{ autoin_ubuntu_ubuntu_gpg_key }}.keyring'
+      --keyserver 'hkp://keyserver.ubuntu.com'
+      --recv-keys {{ autoin_ubuntu_ubuntu_gpg_key }}
+    creates: "{{ autoin_ubuntu_target_dir }}/{{ autoin_ubuntu_ubuntu_gpg_key }}.keyring"
+    executable: /bin/bash
+  changed_when: true
+
+- name: Verify the GPG key
+  ansible.builtin.shell:
+    cmd: >-
+      gpg -q
+      --keyring '{{ autoin_ubuntu_target_dir }}/{{ autoin_ubuntu_ubuntu_gpg_key }}.keyring'
+      --verify '{{ autoin_ubuntu_target_dir }}/SHA256SUMS.gpg'
+      '{{ autoin_ubuntu_target_dir }}/SHA256SUMS' 2>/dev/null
+    executable: /bin/bash
+  changed_when: false
+  failed_when: false
+
+- name: Kill dirmngr if we launched it
+  ansible.builtin.shell:
+    cmd: pkill dirmngr
+    executable: /bin/bash
+  changed_when: true
+  when: autoin_ubuntu_dirmngr_status.rc != 0

@@ -1,0 +1,9 @@
+---
+- name: Configure the target system and install dependencies
+  ansible.builtin.include_tasks: configure.yaml
+
+- name: Download and verify the ISO
+  ansible.builtin.include_tasks: download_verify.yaml
+
+- name: Generate the ISO
+  ansible.builtin.include_tasks: generate_iso.yaml
