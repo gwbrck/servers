@@ -26,6 +26,22 @@ services:
     restart: unless-stopped
     networks:
       - freshrss-internal
+  merc:
+    image: wangqiru/mercury-parser-api
+    restart: always
+    networks:
+      - freshrss-internal
+
+  fivefilters:
+    image: "heussd/fivefilters-full-text-rss:latest"
+    environment:
+      # Leave empty to disable admin section
+      - FTR_ADMIN_PASSWORD=
+    volumes:
+      - "./rss-cache:/var/www/html/cache/rss"
+    networks:
+      - freshrss-internal
+    restart: always
 
 networks:
   {{ freshrss_traefik_network }}:
