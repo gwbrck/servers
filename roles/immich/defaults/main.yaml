@@ -1,0 +1,24 @@
+---
+# Pfade auf dem Host-System
+immich_compose_dir: "/opt/immich"
+immich_compose_file: "{{ default_compose_file }}"
+immich_data_dir: "/srv/service_data/immich/library"
+immich_db_dir: "/srv/service_data/immich/postgres"
+
+# Container Image
+immich_version: "release"
+
+# Datenbank
+immich_db_username: "postgres"
+immich_db_database_name: "immichwbrck"
+immich_db_password: "{{ sops.immich.db_password }}"
+
+# Zeitzone
+immich_timezone: "{{ default_timezone }}"
+
+# Traefik / Netzwerk Einstellungen
+immich_public_url: "{{ sops.immich.domain }}"
+immich_traefik_enable: true
+immich_traefik_router_name: "immich"
+immich_traefik_cert_resolver: "{{ traefik_cert_resolver }}"
+immich_traefik_network: "{{ traefik_network }}"
