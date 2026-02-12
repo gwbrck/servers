@@ -19,7 +19,13 @@
   loop:
     - "{{ immich_data_dir }}"
     - "{{ immich_data_dir }}/database-backup"
-    - "{{ immich_db_dir }}"
+
+- name: Ensure Immich DB directory exists
+  ansible.builtin.file:
+    path: "{{ immich_db_dir }}"
+    state: directory
+    mode: "0700"
+  become: true
 
 - name: Deploy Immich Docker Compose file
   ansible.builtin.template:
