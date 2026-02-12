@@ -1,0 +1,55 @@
+---
+- name: Ensure Immich compose directory exists
+  ansible.builtin.file:
+    path: "{{ immich_compose_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  become: true
+
+- name: Ensure Immich data directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  become: true
+  loop:
+    - "{{ immich_data_dir }}"
+    - "{{ immich_data_dir }}/database-backup"
+    - "{{ immich_db_dir }}"
+
+- name: Deploy Immich Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ immich_compose_dir }}/{{ immich_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Immich stack
+
+- name: Deploy Immich environment file
+  no_log: true
+  ansible.builtin.template:
+    src: immich.env.j2
+    dest: "{{ immich_compose_dir }}/.env"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart Immich stack
+
+- name: Pull images
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ immich_compose_dir }}"
+
+- name: Create and start services
+  community.docker.docker_compose_v2:
+    project_src: "{{ immich_compose_dir }}"
+  register: immich_output
+
+- name: Show results
+  ansible.builtin.debug:
+    var: immich_output
+    verbosity: 1

@@ -15,6 +15,7 @@ groups:
       - audiobookshelf
       - archiv_gregor
       - freshrss
+      - immich
     schedules:
       backup:
         at: "*-*-* 03:30:00"
@@ -30,6 +31,7 @@ groups:
       - audiobookshelf
       - archiv_gregor
       - freshrss
+      - immich
     schedules:
       check:
         at: "Sun *-*-* 04:30:00"
@@ -204,3 +206,17 @@ profiles:
     backup:
       source:
         - "/srv/service_data/freshrss"
+
+  immich:
+    inherit: default
+    run-before:
+      - >-
+        docker compose -f /opt/immich/docker-compose.yaml exec -T database
+        pg_dumpall --clean --if-exists --username='postgres'
+        > /srv/service_data/immich/library/database-backup/immich-database.sql
+    backup:
+      source:
+        - "/srv/service_data/immich/library"
+      exclude:
+        - "/srv/service_data/immich/library/thumbs"
+        - "/srv/service_data/immich/library/encoded-video"

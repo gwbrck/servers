@@ -18,6 +18,7 @@
           ntfy: "{{ sops_raw.ntfy | default({}, true) }}"
           opencloud: "{{ sops_raw.opencloud | default({}, true) }}"
           freshrss: "{{ sops_raw.freshrss | default({}, true) }}"
+          immich: "{{ sops_raw.immich | default({}, true) }}"
 
 - name: System Defaults
   hosts: all
@@ -119,6 +120,13 @@
   tags: [freshrss]
   roles:
     - freshrss
+
+- name: Setup Immich
+  hosts: homeeins-1
+  become: true
+  tags: [immich]
+  roles:
+    - immich
 
 - name: Setup restic backups
   hosts: homeeins-1
