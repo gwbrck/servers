@@ -6,7 +6,7 @@ traefik_network: "{{ sops.proxy.network_name | default('traefik-net', true) }}"
 traefik_cert_resolver: "{{ sops.proxy.cert_resolver | default('dnshetzner', true) }}"
 
 # ntfy
-ntfy_public_url: "ntfy.home.wbrck.de"
+ntfy_public_url: "{{ sops.ntfy.domain }}"
 
 # SSH / Sicherheit
 security_ssh_port: 6861
