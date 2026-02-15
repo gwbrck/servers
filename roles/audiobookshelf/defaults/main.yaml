@@ -1,8 +1,8 @@
 ---
 # Pfade auf dem Host-System
-audiobookshelf_compose_dir: "/opt/audiobookshelf"
+audiobookshelf_compose_dir: "{{ services_compose_base }}/audiobookshelf"
 audiobookshelf_compose_file: "{{ default_compose_file }}"
-audiobookshelf_data_dir: "/srv/service_data/audiobookshelf"
+audiobookshelf_data_dir: "{{ services_data_base }}/audiobookshelf"
 audiobookshelf_audiobooks_dir: "{{ audiobookshelf_data_dir }}/audiobooks"
 audiobookshelf_podcasts_dir: "{{ audiobookshelf_data_dir }}/podcasts"
 audiobookshelf_config_dir: "{{ audiobookshelf_data_dir }}/config"

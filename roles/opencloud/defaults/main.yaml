@@ -1,8 +1,8 @@
 # Pfade auf dem Host-System
-opencloud_compose_dir: "/opt/opencloud"
+opencloud_compose_dir: "{{ services_compose_base }}/opencloud"
 opencloud_compose_file: "{{ default_compose_file }}"
-opencloud_config_dir: "/srv/service_data/opencloud/config"
-opencloud_data_dir: "/srv/service_data/opencloud/data"
+opencloud_config_dir: "{{ services_data_base }}/opencloud/config"
+opencloud_data_dir: "{{ services_data_base }}/opencloud/data"
 
 # Container Image
 opencloud_image: "opencloudeu/opencloud-rolling"

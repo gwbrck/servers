@@ -1,8 +1,8 @@
 ---
 # Pfade auf dem Host-System
-actual_budget_compose_dir: "/opt/actual_budget"
+actual_budget_compose_dir: "{{ services_compose_base }}/actual_budget"
 actual_budget_compose_file: "{{ default_compose_file }}"
-actual_budget_data_dir: "/srv/service_data/actual"
+actual_budget_data_dir: "{{ services_data_base }}/actual"
 actual_budget_server_files_dir: "{{ actual_budget_data_dir }}/server-files"
 actual_budget_user_files_dir: "{{ actual_budget_data_dir }}/user-files"
 

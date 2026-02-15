@@ -1,8 +1,8 @@
 ---
 # Pfade auf dem Host-System
-freshrss_compose_dir: "/opt/freshrss"
+freshrss_compose_dir: "{{ services_compose_base }}/freshrss"
 freshrss_compose_file: "{{ default_compose_file }}"
-freshrss_base_dir: "/srv/service_data/freshrss"
+freshrss_base_dir: "{{ services_data_base }}/freshrss"
 freshrss_data_dir: "{{ freshrss_base_dir }}/data"
 freshrss_extensions_dir: "{{ freshrss_base_dir }}/extensions"
 

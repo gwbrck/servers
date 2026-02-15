@@ -1,8 +1,8 @@
 ---
 # Pfade auf dem Host-System
-vaultwarden_compose_dir: "/opt/vaultwarden"
+vaultwarden_compose_dir: "{{ services_compose_base }}/vaultwarden"
 vaultwarden_compose_file: "{{ default_compose_file }}"
-vaultwarden_data_dir: "/srv/service_data/vw"
+vaultwarden_data_dir: "{{ services_data_base }}/vw"
 
 # Traefik / Netzwerk Einstellungen
 vaultwarden_public_url: "{{ sops.vaultwarden.domain }}"
