@@ -1,9 +1,9 @@
 ---
 # Pfade auf dem Host-System
-immich_compose_dir: "/opt/immich"
+immich_compose_dir: "{{ services_compose_base }}/immich"
 immich_compose_file: "{{ default_compose_file }}"
-immich_data_dir: "/srv/service_data/immich/library"
-immich_db_dir: "/srv/service_data/immich/postgres"
+immich_data_dir: "{{ services_data_base }}/immich/library"
+immich_db_dir: "{{ services_data_base }}/immich/postgres"
 
 # Container Image
 immich_version: "release"

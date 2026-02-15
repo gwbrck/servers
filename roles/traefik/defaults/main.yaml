@@ -1,5 +1,5 @@
 ---
-traefik_compose_dir: "/opt/traefik"
+traefik_compose_dir: "{{ services_compose_base }}/traefik"
 traefik_compose_file: "{{ default_compose_file }}"
 
 traefik_env_file: "{{ traefik_compose_dir }}/.env"

@@ -1,8 +1,8 @@
 ---
 # Pfade auf dem Host-System
-ntfy_compose_dir: "/opt/ntfy"
+ntfy_compose_dir: "{{ services_compose_base }}/ntfy"
 ntfy_compose_file: "{{ default_compose_file }}"
-ntfy_data_dir: "/srv/service_data/ntfy"
+ntfy_data_dir: "{{ services_data_base }}/ntfy"
 
 # Zeitzone
 ntfy_timezone: "{{ default_timezone }}"
