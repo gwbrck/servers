@@ -19,6 +19,8 @@
           opencloud: "{{ sops_raw.opencloud | default({}, true) }}"
           freshrss: "{{ sops_raw.freshrss | default({}, true) }}"
           immich: "{{ sops_raw.immich | default({}, true) }}"
+          audiobookshelf: "{{ sops_raw.audiobookshelf | default({}, true) }}"
+          actual_budget: "{{ sops_raw.actual_budget | default({}, true) }}"
 
 - name: System Defaults
   hosts: all

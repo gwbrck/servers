@@ -7,7 +7,7 @@ actual_budget_server_files_dir: "{{ actual_budget_data_dir }}/server-files"
 actual_budget_user_files_dir: "{{ actual_budget_data_dir }}/user-files"
 
 # Traefik / Netzwerk Einstellungen
-actual_budget_public_url: "budget.home.wbrck.de"
+actual_budget_public_url: "{{ sops.actual_budget.domain }}"
 actual_budget_traefik_enable: true
 actual_budget_traefik_router_name: "actual"
 actual_budget_traefik_cert_resolver: "{{ traefik_cert_resolver }}"
