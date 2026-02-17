@@ -4,10 +4,13 @@
   vars:
     sops_file: "{{ lookup('env', 'HOME') }}/OpenCloud/Dots/server_infra.yaml"
   tasks:
-    - name: Read SOPS secrets
+    - name: Decrypt SOPS file
       no_log: true
-      vars:
+      ansible.builtin.set_fact:
         sops_raw: "{{ lookup('community.sops.sops', sops_file, errors='ignore') | from_yaml }}"
+
+    - name: Map SOPS secrets
+      no_log: true
       ansible.builtin.set_fact:
         sops_data:
           mydefaults: "{{ sops_raw.mydefaults | default({}, true) }}"
