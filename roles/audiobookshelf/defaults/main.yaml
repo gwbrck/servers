@@ -12,7 +12,7 @@ audiobookshelf_metadata_dir: "{{ audiobookshelf_data_dir }}/metadata"
 audiobookshelf_timezone: "{{ default_timezone }}"
 
 # Traefik / Netzwerk Einstellungen
-audiobookshelf_public_url: "audio.home.wbrck.de"
+audiobookshelf_public_url: "{{ sops.audiobookshelf.domain }}"
 audiobookshelf_traefik_enable: true
 audiobookshelf_traefik_network: "{{ traefik_network }}"
 audiobookshelf_traefik_router_name: "audiobookshelf"
