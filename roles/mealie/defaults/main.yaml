@@ -15,3 +15,10 @@ mealie_traefik_enable: true
 mealie_traefik_router_name: "mealie"
 mealie_traefik_cert_resolver: "{{ traefik_cert_resolver }}"
 mealie_traefik_network: "{{ traefik_network }}"
+
+
+mealie_openai_base_url: "{{ sops.mealie.openai.base_url }}"
+mealie_openai_api_key: "{{ sops.mealie.openai.api_key }}"
+mealie_openai_model: "{{ sops.mealie.openai.model }}"
+mealie_openai_enable_image_services: true
+mealie_openai_send_database_data: true

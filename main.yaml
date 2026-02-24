@@ -1,6 +1,7 @@
 - name: Load SOPS secrets
   hosts: localhost
   gather_facts: false
+  tags: sops
   vars:
     sops_file: "{{ lookup('env', 'HOME') }}/OpenCloud/Dots/server_infra.yaml"
   tasks:
