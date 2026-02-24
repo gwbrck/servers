@@ -1,0 +1,17 @@
+# Pfade auf dem Host-System
+mealie_compose_dir: "{{ services_compose_base }}/mealie"
+mealie_compose_file: "{{ default_compose_file }}"
+mealie_data_dir: "{{ services_data_base }}/mealie/data"
+
+# Container Image
+mealie_image: "ghcr.io/mealie-recipes/mealie"
+mealie_tag: "latest"
+
+# Mealie Einstellungen
+mealie_public_url: "{{ sops.mealie.domain }}"
+
+# Traefik / Netzwerk Einstellungen
+mealie_traefik_enable: true
+mealie_traefik_router_name: "mealie"
+mealie_traefik_cert_resolver: "{{ traefik_cert_resolver }}"
+mealie_traefik_network: "{{ traefik_network }}"

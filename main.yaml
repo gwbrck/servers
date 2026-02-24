@@ -24,6 +24,7 @@
           immich: "{{ sops_raw.immich | default({}, true) }}"
           audiobookshelf: "{{ sops_raw.audiobookshelf | default({}, true) }}"
           actual_budget: "{{ sops_raw.actual_budget | default({}, true) }}"
+          mealie: "{{ sops_raw.mealie | default({}, true) }}"
 
 - name: System Defaults
   hosts: all
@@ -132,6 +133,14 @@
   tags: [immich]
   roles:
     - immich
+
+
+- name: Setup Mealie
+  hosts: homeeins-1
+  become: true
+  tags: [mealie]
+  roles:
+    - mealie
 
 - name: Setup restic backups
   hosts: homeeins-1

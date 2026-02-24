@@ -1,0 +1,26 @@
+services:
+  mealie:
+    image: "{{ mealie_image }}:{{ mealie_tag }}"
+    container_name: "mealie"
+    restart: unless-stopped
+    env_file: .env
+    deploy:
+      resources:
+        limits:
+          memory: 1000M
+    volumes:
+      - "{{ mealie_data_dir }}:/app/data"
+    labels:
+      - "traefik.enable={{ mealie_traefik_enable | default(true) | ternary('true', 'false') }}"
+      - "traefik.docker.network={{ mealie_traefik_network }}"
+      - "traefik.http.routers.{{ mealie_traefik_router_name }}.rule=Host(`{{ mealie_public_url }}`)"
+      - "traefik.http.routers.{{ mealie_traefik_router_name }}.entrypoints=websecure"
+      - "traefik.http.routers.{{ mealie_traefik_router_name }}.tls.certresolver={{ mealie_traefik_cert_resolver }}"
+      - "traefik.http.services.{{ mealie_traefik_router_name }}.loadbalancer.server.port=9000"
+    networks:
+      - "{{ mealie_traefik_network }}"
+
+networks:
+  {{ mealie_traefik_network }}:
+    name: {{ mealie_traefik_network }}
+    external: true

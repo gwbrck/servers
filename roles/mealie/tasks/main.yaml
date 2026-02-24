@@ -1,0 +1,48 @@
+- name: Ensure Mealie compose directory exists
+  ansible.builtin.file:
+    path: "{{ mealie_compose_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  become: true
+
+- name: Ensure Mealie data directory exists
+  ansible.builtin.file:
+    path: "{{ mealie_data_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+  become: true
+
+- name: Deploy Mealie Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ mealie_compose_dir }}/{{ mealie_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Deploy Mealie environment file
+  no_log: true
+  ansible.builtin.template:
+    src: mealie.env.j2
+    dest: "{{ mealie_compose_dir }}/.env"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Pull images
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ mealie_compose_dir }}"
+
+- name: Create and start services
+  community.docker.docker_compose_v2:
+    project_src: "{{ mealie_compose_dir }}"
+  register: mealie_output
+
+- name: Show results
+  ansible.builtin.debug:
+    var: mealie_output
+    verbosity: 1
