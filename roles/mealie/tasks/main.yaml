@@ -11,8 +11,6 @@
   ansible.builtin.file:
     path: "{{ mealie_data_dir }}"
     state: directory
-    owner: root
-    group: root
     mode: "0750"
   become: true
 
