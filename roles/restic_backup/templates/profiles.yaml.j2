@@ -55,17 +55,6 @@ profiles:
       tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
     snapshots:
       tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
-      send-after:
-        - method: POST
-          url: {{ restic_backup_ntfy_url }}/{{ restic_backup_ntfy_topic }}
-          body: "Snapshots wurden erfolgreich aufgelistet."
-          headers:
-            - name: Authorization
-              value: Bearer {{ restic_backup_ntfy_token }}
-            - name: Title
-              value: "{% raw %}✅ Snapshots OK: {{ .Profile.Name }}{% endraw %}"
-            - name: Tags
-              value: "file_folder"
       send-after-fail:
         - method: POST
           url: {{ restic_backup_ntfy_url }}/{{ restic_backup_ntfy_topic }}
@@ -82,19 +71,6 @@ profiles:
     backup:
       tag: "{% raw %}{{ .Profile.Name }}{% endraw %}"
       schedule-permission: system
-      send-after:
-        - method: POST
-          url: {{ restic_backup_ntfy_url }}/{{ restic_backup_ntfy_topic }}
-          body: "Backup erfolgreich beendet."
-          headers:
-            - name: Authorization
-              value: Bearer {{ restic_backup_ntfy_token }}
-            - name: Title
-              value: "{% raw %}✅ Erfolg: {{ .Profile.Name }}{% endraw %}"
-            - name: Tags
-              value: "white_check_mark"
-            - name: Priority
-              value: "2"
       send-after-fail:
         - method: POST
           url: {{ restic_backup_ntfy_url }}/{{ restic_backup_ntfy_topic }}
@@ -159,6 +135,16 @@ profiles:
         - "{{ services_data_base }}/vw/db.sqlite3-shm"
         - "{{ services_data_base }}/vw/tmp"
         - "{{ services_data_base }}/vw/sends"
+
+  uptime_kuma:
+    inherit: default
+    run-before:
+      - "docker compose -f {{ services_compose_base }}/uptime_kuma/{{ default_compose_file }} stop uptime-kuma"
+    run-after:
+      - "docker compose -f {{ services_compose_base }}/uptime_kuma/{{ default_compose_file }} start uptime-kuma"
+    backup:
+      source:
+        - "{{ services_data_base }}/uptime_kuma"
 
   audiobookshelf:
     inherit: default
@@ -234,13 +220,9 @@ profiles:
     backup:
       source:
         - "{{ services_data_base }}/mealie/data"
+      send-after:
+        - method: GET
+          url: {{ restic_backup_uptime_kuma_push_url }}
 
-  uptime_kuma:
-    inherit: default
-    run-before:
-      - "docker compose -f {{ services_compose_base }}/uptime_kuma/{{ default_compose_file }} stop uptime-kuma"
-    run-after:
-      - "docker compose -f {{ services_compose_base }}/uptime_kuma/{{ default_compose_file }} start uptime-kuma"
-    backup:
-      source:
-        - "{{ services_data_base }}/uptime_kuma"
+
+
