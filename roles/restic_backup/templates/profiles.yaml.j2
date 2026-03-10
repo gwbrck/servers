@@ -17,6 +17,7 @@ groups:
       - freshrss
       - immich
       - mealie
+      - uptime_kuma
     schedules:
       backup:
         at: "*-*-* 03:30:00"
@@ -34,6 +35,7 @@ groups:
       - freshrss
       - immich
       - mealie
+      - uptime_kuma
     schedules:
       check:
         at: "Sun *-*-* 04:30:00"
@@ -232,3 +234,13 @@ profiles:
     backup:
       source:
         - "{{ services_data_base }}/mealie/data"
+
+  uptime_kuma:
+    inherit: default
+    run-before:
+      - "docker compose -f {{ services_compose_base }}/uptime_kuma/{{ default_compose_file }} stop uptime-kuma"
+    run-after:
+      - "docker compose -f {{ services_compose_base }}/uptime_kuma/{{ default_compose_file }} start uptime-kuma"
+    backup:
+      source:
+        - "{{ services_data_base }}/uptime_kuma"

@@ -1,0 +1,21 @@
+services:
+  uptime-kuma:
+    image: "{{ uptime_kuma_image }}:{{ uptime_kuma_tag }}"
+    container_name: "uptime-kuma"
+    restart: unless-stopped
+    volumes:
+      - "{{ uptime_kuma_data_dir }}:/app/data"
+    labels:
+      - "traefik.enable={{ uptime_kuma_traefik_enable | default(true) | ternary('true', 'false') }}"
+      - "traefik.docker.network={{ uptime_kuma_traefik_network }}"
+      - "traefik.http.routers.{{ uptime_kuma_traefik_router_name }}.rule=Host(`{{ uptime_kuma_public_url }}`)"
+      - "traefik.http.routers.{{ uptime_kuma_traefik_router_name }}.entrypoints=websecure"
+      - "traefik.http.routers.{{ uptime_kuma_traefik_router_name }}.tls.certresolver={{ uptime_kuma_traefik_cert_resolver }}"
+      - "traefik.http.services.{{ uptime_kuma_traefik_router_name }}.loadbalancer.server.port=3001"
+    networks:
+      - "{{ uptime_kuma_traefik_network }}"
+
+networks:
+  {{ uptime_kuma_traefik_network }}:
+    name: {{ uptime_kuma_traefik_network }}
+    external: true

@@ -1,0 +1,16 @@
+---
+# Pfade auf dem Host-System
+uptime_kuma_compose_dir: "{{ services_compose_base }}/uptime_kuma"
+uptime_kuma_compose_file: "{{ default_compose_file }}"
+uptime_kuma_data_dir: "{{ services_data_base }}/uptime_kuma"
+
+# Container Image (v2)
+uptime_kuma_image: "louislam/uptime-kuma"
+uptime_kuma_tag: "2"
+
+# Traefik / Netzwerk Einstellungen
+uptime_kuma_public_url: "{{ sops.uptime_kuma.domain }}"
+uptime_kuma_traefik_enable: true
+uptime_kuma_traefik_router_name: "uptime-kuma"
+uptime_kuma_traefik_cert_resolver: "{{ traefik_cert_resolver }}"
+uptime_kuma_traefik_network: "{{ traefik_network }}"
