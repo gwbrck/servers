@@ -2,6 +2,8 @@ version: "2"
 global:
   restic-binary: "{{ restic_backup_target_bin }}/restic"
   scheduler: "systemd"
+  restic-stale-lock-age: "2h"
+  restic-lock-retry-after: "1m"
 
 
 groups:
@@ -45,6 +47,8 @@ profiles:
   default:
     repository: "s3:https://{{ restic_backup_s3_endpoint }}/{{ restic_backup_s3_bucket }}"
     initialize: true
+    force-inactive-lock: true
+    lock: "/tmp/resticprofile-repo.lock"
     env-file: "{{ restic_backup_env_file }}"
     status-file: backup-status.json
     retention:
