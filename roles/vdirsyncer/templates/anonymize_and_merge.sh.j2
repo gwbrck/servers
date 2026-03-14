@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+DATASHARE_DIR="/var/lib/vdirsyncer/local_datashare"
+EXCHANGE_DIR="/var/lib/vdirsyncer/local_exchange"
+MERGED_DIR="/var/lib/vdirsyncer/merged/default"
+
+mkdir -p "$MERGED_DIR"
+
+python3 - "$DATASHARE_DIR" "$EXCHANGE_DIR" "$MERGED_DIR" <<'PY'
+import pathlib, re, sys
+
+src_ds = pathlib.Path(sys.argv[1])
+src_ex = pathlib.Path(sys.argv[2])
+merged = pathlib.Path(sys.argv[3])
+
+STRIP = re.compile(
+    r"^(SUMMARY|DESCRIPTION|LOCATION|ATTENDEE|ORGANIZER)"
+    r"[:;].*(?:\r?\n[ \t].*)*\r?\n?",
+    re.MULTILINE,
+)
+
+expected = set()
+
+for prefix, src in [("ds", src_ds), ("ex", src_ex)]:
+    for ics in src.rglob("*.ics"):
+        name = f"{prefix}_{ics.relative_to(src).as_posix().replace('/', '_')}"
+        expected.add(name)
+        content = ics.read_text(encoding="utf-8")
+        content = STRIP.sub("", content)
+        content = re.sub(
+            r"(BEGIN:VEVENT\r?\n)",
+            "\\1SUMMARY:Arbeitstermin\r\n",
+            content,
+        )
+        (merged / name).write_bytes(content.encode("utf-8"))
+
+for old in merged.glob("*.ics"):
+    if old.name not in expected:
+        old.unlink()
+PY

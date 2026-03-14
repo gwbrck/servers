@@ -27,6 +27,7 @@
           actual_budget: "{{ sops_raw.actual_budget | default({}, true) }}"
           mealie: "{{ sops_raw.mealie | default({}, true) }}"
           uptime_kuma: "{{ sops_raw.uptime_kuma | default({}, true) }}"
+          vdirsyncer: "{{ sops_raw.vdirsyncer | default({}, true) }}"
 
 - name: System Defaults
   hosts: all
@@ -157,3 +158,10 @@
   tags: [restic_backup]
   roles:
     - restic_backup
+
+- name: Setup vdirsyncer
+  hosts: pivpn
+  become: true
+  tags: [vdirsyncer]
+  roles:
+    - vdirsyncer

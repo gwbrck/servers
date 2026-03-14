@@ -22,8 +22,11 @@
     mode: "0700"
   loop:
     - /var/lib/vdirsyncer/.vdirsyncer
-    - /var/lib/vdirsyncer/localclean
-    - /var/lib/vdirsyncer/localclean/cleaned
+    - /var/lib/vdirsyncer/.vdirsyncer/status
+    - /var/lib/vdirsyncer/local_datashare
+    - /var/lib/vdirsyncer/local_exchange
+    - /var/lib/vdirsyncer/merged
+    - /var/lib/vdirsyncer/merged/default
 
 - name: Deploy vdirsyncer config
   no_log: true
@@ -34,36 +37,36 @@
     group: vdirsyncer
     mode: "0600"
   notify:
-    - Run attendee stripping sync
+    - Run calendar sync
 
 - name: Ensure env dir exists
   ansible.builtin.file:
     path: /etc/vdirsyncer
     state: directory
-    owner: root
-    group: root
-    mode: "0700"
+    owner: vdirsyncer
+    group: vdirsyncer
+    mode: "0750"
 
 - name: Deploy vdirsyncer environment file
   no_log: true
   ansible.builtin.template:
     src: env.j2
     dest: /etc/vdirsyncer/env
-    owner: root
-    group: root
+    owner: vdirsyncer
+    group: vdirsyncer
     mode: "0600"
   notify:
-    - Run attendee stripping sync
+    - Run calendar sync
 
-- name: Deploy attendee stripping helper script
+- name: Deploy anonymize and merge script
   ansible.builtin.template:
-    src: strip_attendees.sh.j2
-    dest: /usr/local/bin/strip_attendees.sh
+    src: anonymize_and_merge.sh.j2
+    dest: /usr/local/bin/anonymize_and_merge.sh
     owner: root
     group: root
     mode: "0755"
   notify:
-    - Run attendee stripping sync
+    - Run calendar sync
 
 - name: Deploy systemd service unit
   ansible.builtin.template:
@@ -80,5 +83,5 @@
     mode: "0644"
   notify:
     - Reload systemd daemon
-    - Enable and start attendee stripping timer
-    - Run attendee stripping sync
+    - Enable and start calendar sync timer
+    - Run calendar sync

@@ -1,32 +1,51 @@
 [general]
 status_path = "/var/lib/vdirsyncer/.vdirsyncer/status/"
 
-[storage tud]
+[storage datashare]
 type = "caldav"
-url = "{{ sops.vdirsyncer.tud.url }}"
-username = "{{ sops.vdirsyncer.tud.username }}"
-password.fetch  = ["command", "printenv", "TUD_PASS"]
+url = "{{ sops.vdirsyncer.datashare.url }}"
 read_only = true
+
+[storage exchange]
+type = "http"
+url = "{{ sops.vdirsyncer.exchange.url }}"
+read_only = true
+
+[storage local_datashare]
+type = "filesystem"
+path = "/var/lib/vdirsyncer/local_datashare/"
+fileext = ".ics"
+
+[storage local_exchange]
+type = "filesystem"
+path = "/var/lib/vdirsyncer/local_exchange/"
+fileext = ".ics"
+
+[storage merged]
+type = "filesystem"
+path = "/var/lib/vdirsyncer/merged/"
+fileext = ".ics"
 
 [storage icloud]
 type = "caldav"
 url = "{{ sops.vdirsyncer.icloud.url }}"
 username = "{{ sops.vdirsyncer.icloud.username }}"
-password.fetch  = ["command", "printenv", "ICLOUD_PASS"]
+password.fetch = ["command", "printenv", "ICLOUD_PASS"]
 
-[storage localclean]
-type = "filesystem"
-path = "/var/lib/vdirsyncer/localclean/"
-fileext = ".ics"
-
-[pair tud_to_local]
-a = "tud"
-b = "localclean"
-collections = [["tud_to_local", "{{ sops.vdirsyncer.tud.targetcal }}", "cleaned"]]
+[pair datashare_to_local]
+a = "datashare"
+b = "local_datashare"
+collections = [["datashare", null, "default"]]
 conflict_resolution = "a wins"
 
-[pair local_to_icloud]
-a = "localclean"
+[pair exchange_to_local]
+a = "exchange"
+b = "local_exchange"
+collections = null
+conflict_resolution = "a wins"
+
+[pair merged_to_icloud]
+a = "merged"
 b = "icloud"
-collections = [["local_to_icloud", "cleaned", "{{ sops.vdirsyncer.icloud.targetcal }}"]]
+collections = [["merged_to_icloud", "default", "{{ sops.vdirsyncer.icloud.targetcal }}"]]
 conflict_resolution = "a wins"
