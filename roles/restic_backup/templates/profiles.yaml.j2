@@ -2,8 +2,8 @@ version: "2"
 global:
   restic-binary: "{{ restic_backup_target_bin }}/restic"
   scheduler: "systemd"
-  restic-stale-lock-age: "2h"
-  restic-lock-retry-after: "1m"
+  restic-stale-lock-age: "15m"
+  restic-lock-retry-after: "30s"
 
 
 groups:
@@ -24,6 +24,7 @@ groups:
       backup:
         at: "*-*-* 03:30:00"
         permission: system
+        lock-wait: "20m"
 
   weekly-check:
     description: "Wöchentliche Checks aller Profile"
@@ -42,6 +43,7 @@ groups:
       check:
         at: "Sun *-*-* 04:30:00"
         permission: system
+        lock-wait: "20m"
 
 profiles:
   default:
