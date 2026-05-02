@@ -26,8 +26,8 @@
     - /var/lib/vdirsyncer/local_datashare
     - /var/lib/vdirsyncer/local_exchange
     - /var/lib/vdirsyncer/local_icloud_privat
-    - /var/lib/vdirsyncer/merged
-    - /var/lib/vdirsyncer/merged/default
+    - /var/lib/vdirsyncer/availability_work
+    - /var/lib/vdirsyncer/availability_private
 
 - name: Deploy vdirsyncer config
   no_log: true

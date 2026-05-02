@@ -11,12 +11,23 @@ type = "http"
 url = "{{ sops.vdirsyncer.exchange.url }}"
 read_only = true
 
-[storage icloud_privat]
+[storage icloud_source]
 type = "caldav"
 url = "{{ sops.vdirsyncer.icloud.url }}"
 username = "{{ sops.vdirsyncer.icloud.username }}"
 password.fetch = ["command", "printenv", "ICLOUD_PASS"]
-read_only = true
+
+[storage icloud_work]
+type = "caldav"
+url = "{{ sops.vdirsyncer.icloud.url }}"
+username = "{{ sops.vdirsyncer.icloud.username }}"
+password.fetch = ["command", "printenv", "ICLOUD_PASS"]
+
+[storage icloud_private]
+type = "caldav"
+url = "{{ sops.vdirsyncer.icloud.url }}"
+username = "{{ sops.vdirsyncer.icloud.username }}"
+password.fetch = ["command", "printenv", "ICLOUD_PASS"]
 
 [storage local_datashare]
 type = "filesystem"
@@ -33,16 +44,15 @@ type = "filesystem"
 path = "/var/lib/vdirsyncer/local_icloud_privat/"
 fileext = ".ics"
 
-[storage merged]
+[storage availability_work]
 type = "filesystem"
-path = "/var/lib/vdirsyncer/merged/"
+path = "/var/lib/vdirsyncer/availability_work/"
 fileext = ".ics"
 
-[storage icloud]
-type = "caldav"
-url = "{{ sops.vdirsyncer.icloud.url }}"
-username = "{{ sops.vdirsyncer.icloud.username }}"
-password.fetch = ["command", "printenv", "ICLOUD_PASS"]
+[storage availability_private]
+type = "filesystem"
+path = "/var/lib/vdirsyncer/availability_private/"
+fileext = ".ics"
 
 [pair datashare_to_local]
 a = "datashare"
@@ -57,13 +67,19 @@ collections = null
 conflict_resolution = "a wins"
 
 [pair icloud_privat_to_local]
-a = "icloud_privat"
+a = "icloud_source"
 b = "local_icloud_privat"
-collections = [["icloud_privat", "{{ sops.vdirsyncer.icloud_privat.sourcecal }}", "default"]]
+collections = [["icloud_privat", "{{ sops.vdirsyncer.icloud.sourcecal_privat }}", "default"]]
 conflict_resolution = "a wins"
 
-[pair merged_to_icloud]
-a = "merged"
-b = "icloud"
-collections = [["merged_to_icloud", "default", "{{ sops.vdirsyncer.icloud.targetcal }}"]]
+[pair availability_work_to_icloud]
+a = "availability_work"
+b = "icloud_work"
+collections = [["availability_work_to_icloud", null, "{{ sops.vdirsyncer.icloud.targetcal_work }}"]]
+conflict_resolution = "a wins"
+
+[pair availability_private_to_icloud]
+a = "availability_private"
+b = "icloud_private"
+collections = [["availability_private_to_icloud", null, "{{ sops.vdirsyncer.icloud.targetcal_private }}"]]
 conflict_resolution = "a wins"

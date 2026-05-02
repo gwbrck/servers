@@ -4,26 +4,27 @@ set -euo pipefail
 DATASHARE_DIR="/var/lib/vdirsyncer/local_datashare"
 EXCHANGE_DIR="/var/lib/vdirsyncer/local_exchange"
 ICLOUD_PRIVAT_DIR="/var/lib/vdirsyncer/local_icloud_privat"
-MERGED_DIR="/var/lib/vdirsyncer/merged/default"
+WORK_DIR="/var/lib/vdirsyncer/availability_work"
+PRIVATE_DIR="/var/lib/vdirsyncer/availability_private"
 MAP_FILE="/var/lib/vdirsyncer/uid_map.json"
 
-mkdir -p "$MERGED_DIR"
+mkdir -p "$WORK_DIR" "$PRIVATE_DIR"
 
-python3 - "$DATASHARE_DIR" "$EXCHANGE_DIR" "$ICLOUD_PRIVAT_DIR" "$MERGED_DIR" "$MAP_FILE" <<'PY'
+python3 - "$DATASHARE_DIR" "$EXCHANGE_DIR" "$ICLOUD_PRIVAT_DIR" "$WORK_DIR" "$PRIVATE_DIR" "$MAP_FILE" <<'PY'
 import hashlib, json, pathlib, re, sys
 
 src_ds = pathlib.Path(sys.argv[1])
 src_ex = pathlib.Path(sys.argv[2])
 src_ip = pathlib.Path(sys.argv[3])
-merged = pathlib.Path(sys.argv[4])
-map_file = pathlib.Path(sys.argv[5])
+work_dir = pathlib.Path(sys.argv[4])
+private_dir = pathlib.Path(sys.argv[5])
+map_file = pathlib.Path(sys.argv[6])
 
 STRIP = re.compile(
     r"^(SUMMARY|DESCRIPTION|LOCATION|ATTENDEE|ORGANIZER)"
     r"[:;].*(?:\r?\n[ \t].*)*\r?\n?",
     re.MULTILINE,
 )
-# Robusteres Regex fuer UID — erkennt UID: und UID;...:
 UID_RE = re.compile(r"^UID[:;](.*?)$", re.MULTILINE)
 
 if map_file.exists():
@@ -32,12 +33,10 @@ if map_file.exists():
 else:
     uid_map = {}
 
-expected = set()
-current_keys = set()
-
-for prefix, src in [("ds", src_ds), ("ex", src_ex), ("ip", src_ip)]:
+def process_source(prefix, src, out_dir):
+    expected = set()
+    current_keys = set()
     for ics in src.rglob("*.ics"):
-        # Read raw, normalize line endings to CRLF
         content = ics.read_bytes().decode("utf-8")
         content = content.replace("\r\n", "\n").replace("\n", "\r\n")
 
@@ -46,7 +45,6 @@ for prefix, src in [("ds", src_ds), ("ex", src_ex), ("ip", src_ip)]:
         mapping_key = f"{prefix}_{original_uid}"
         current_keys.add(mapping_key)
 
-        # Hash UID for ALL sources to avoid any iCloud conflicts
         if mapping_key not in uid_map:
             new_uid = hashlib.sha256(f"{original_uid}_{prefix}".encode()).hexdigest()[:32]
             uid_map[mapping_key] = new_uid
@@ -55,7 +53,6 @@ for prefix, src in [("ds", src_ds), ("ex", src_ex), ("ip", src_ip)]:
         if uid_match:
             content = UID_RE.sub(f"UID:{modified_uid}", content, count=1)
         else:
-            # No UID found in original — insert after BEGIN:VEVENT
             content = re.sub(
                 r"(BEGIN:VEVENT\r?\n)",
                 f"\\1UID:{modified_uid}\r\n",
@@ -72,20 +69,24 @@ for prefix, src in [("ds", src_ds), ("ex", src_ex), ("ip", src_ip)]:
             "\\1SUMMARY:Arbeitstermin\r\n",
             content,
         )
-        # Remove double blank lines
-        content = re.sub(r"\r\n\r\n+", "\r\n", content)
-        (merged / name).write_bytes(content.encode("utf-8"))
+        content = re.sub(r"\r?\n\r?\n+", "\r\n", content)
+        (out_dir / name).write_bytes(content.encode("utf-8"))
 
-# Remove orphaned mapping entries
+    for old in out_dir.glob("*.ics"):
+        if old.name not in expected:
+            old.unlink()
+
+    return current_keys
+
+all_current_keys = set()
+all_current_keys.update(process_source("ds", src_ds, work_dir))
+all_current_keys.update(process_source("ex", src_ex, work_dir))
+all_current_keys.update(process_source("ip", src_ip, private_dir))
+
 for orphaned_key in list(uid_map.keys()):
-    if orphaned_key not in current_keys:
+    if orphaned_key not in all_current_keys:
         del uid_map[orphaned_key]
 
 with open(map_file, "w", encoding="utf-8") as f:
     json.dump(uid_map, f, indent=2)
-
-# Remove stale merged files
-for old in merged.glob("*.ics"):
-    if old.name not in expected:
-        old.unlink()
 PY
