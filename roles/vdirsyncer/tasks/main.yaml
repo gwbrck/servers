@@ -25,6 +25,7 @@
     - /var/lib/vdirsyncer/.vdirsyncer/status
     - /var/lib/vdirsyncer/local_datashare
     - /var/lib/vdirsyncer/local_exchange
+    - /var/lib/vdirsyncer/local_icloud_privat
     - /var/lib/vdirsyncer/merged
     - /var/lib/vdirsyncer/merged/default
 

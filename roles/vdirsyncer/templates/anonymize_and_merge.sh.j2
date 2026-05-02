@@ -3,38 +3,88 @@ set -euo pipefail
 
 DATASHARE_DIR="/var/lib/vdirsyncer/local_datashare"
 EXCHANGE_DIR="/var/lib/vdirsyncer/local_exchange"
+ICLOUD_PRIVAT_DIR="/var/lib/vdirsyncer/local_icloud_privat"
 MERGED_DIR="/var/lib/vdirsyncer/merged/default"
+MAP_FILE="/var/lib/vdirsyncer/uid_map.json"
 
 mkdir -p "$MERGED_DIR"
 
-python3 - "$DATASHARE_DIR" "$EXCHANGE_DIR" "$MERGED_DIR" <<'PY'
-import pathlib, re, sys
+python3 - "$DATASHARE_DIR" "$EXCHANGE_DIR" "$ICLOUD_PRIVAT_DIR" "$MERGED_DIR" "$MAP_FILE" <<'PY'
+import hashlib, json, pathlib, re, sys
 
 src_ds = pathlib.Path(sys.argv[1])
 src_ex = pathlib.Path(sys.argv[2])
-merged = pathlib.Path(sys.argv[3])
+src_ip = pathlib.Path(sys.argv[3])
+merged = pathlib.Path(sys.argv[4])
+map_file = pathlib.Path(sys.argv[5])
 
 STRIP = re.compile(
     r"^(SUMMARY|DESCRIPTION|LOCATION|ATTENDEE|ORGANIZER)"
     r"[:;].*(?:\r?\n[ \t].*)*\r?\n?",
     re.MULTILINE,
 )
+# Robusteres Regex fuer UID — erkennt UID: und UID;...:
+UID_RE = re.compile(r"^UID[:;](.*?)$", re.MULTILINE)
+
+if map_file.exists():
+    with open(map_file, "r", encoding="utf-8") as f:
+        uid_map = json.load(f)
+else:
+    uid_map = {}
 
 expected = set()
+current_keys = set()
 
-for prefix, src in [("ds", src_ds), ("ex", src_ex)]:
+for prefix, src in [("ds", src_ds), ("ex", src_ex), ("ip", src_ip)]:
     for ics in src.rglob("*.ics"):
-        name = f"{prefix}_{ics.relative_to(src).as_posix().replace('/', '_')}"
+        # Read raw, normalize line endings to CRLF
+        content = ics.read_bytes().decode("utf-8")
+        content = content.replace("\r\n", "\n").replace("\n", "\r\n")
+
+        uid_match = UID_RE.search(content)
+        original_uid = uid_match.group(1).strip() if uid_match else ics.stem
+        mapping_key = f"{prefix}_{original_uid}"
+        current_keys.add(mapping_key)
+
+        # Hash UID for ALL sources to avoid any iCloud conflicts
+        if mapping_key not in uid_map:
+            new_uid = hashlib.sha256(f"{original_uid}_{prefix}".encode()).hexdigest()[:32]
+            uid_map[mapping_key] = new_uid
+        modified_uid = uid_map[mapping_key]
+
+        if uid_match:
+            content = UID_RE.sub(f"UID:{modified_uid}", content, count=1)
+        else:
+            # No UID found in original — insert after BEGIN:VEVENT
+            content = re.sub(
+                r"(BEGIN:VEVENT\r?\n)",
+                f"\\1UID:{modified_uid}\r\n",
+                content,
+                count=1,
+            )
+
+        name = f"{prefix}_{modified_uid}.ics"
         expected.add(name)
-        content = ics.read_text(encoding="utf-8")
+
         content = STRIP.sub("", content)
         content = re.sub(
             r"(BEGIN:VEVENT\r?\n)",
             "\\1SUMMARY:Arbeitstermin\r\n",
             content,
         )
+        # Remove double blank lines
+        content = re.sub(r"\r\n\r\n+", "\r\n", content)
         (merged / name).write_bytes(content.encode("utf-8"))
 
+# Remove orphaned mapping entries
+for orphaned_key in list(uid_map.keys()):
+    if orphaned_key not in current_keys:
+        del uid_map[orphaned_key]
+
+with open(map_file, "w", encoding="utf-8") as f:
+    json.dump(uid_map, f, indent=2)
+
+# Remove stale merged files
 for old in merged.glob("*.ics"):
     if old.name not in expected:
         old.unlink()

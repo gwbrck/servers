@@ -1,5 +1,5 @@
 [Unit]
-Description=Sync work calendars (datashare + exchange) into iCloud
+Description=Sync work calendars (datashare + exchange + icloud_privat) into iCloud
 Wants=network-online.target
 After=network-online.target
 
@@ -7,7 +7,7 @@ After=network-online.target
 Type=oneshot
 EnvironmentFile=/etc/vdirsyncer/env
 User=vdirsyncer
-ExecStartPre=/bin/sh -c 'test -d /var/lib/vdirsyncer/.vdirsyncer/status/datashare_to_local && test -d /var/lib/vdirsyncer/.vdirsyncer/status/merged_to_icloud || yes | /usr/bin/vdirsyncer discover'
+ExecStartPre=/bin/sh -c 'test -d /var/lib/vdirsyncer/.vdirsyncer/status/datashare_to_local && test -d /var/lib/vdirsyncer/.vdirsyncer/status/exchange_to_local && test -d /var/lib/vdirsyncer/.vdirsyncer/status/icloud_privat_to_local && test -d /var/lib/vdirsyncer/.vdirsyncer/status/merged_to_icloud || yes | /usr/bin/vdirsyncer discover'
 WorkingDirectory=/var/lib/vdirsyncer
 CacheDirectory=vdirsyncer
 UMask=0077
@@ -30,5 +30,6 @@ ReadOnlyPaths=/etc/vdirsyncer
 ReadWritePaths=/var/lib/vdirsyncer
 ExecStart=/usr/bin/vdirsyncer sync datashare_to_local
 ExecStart=/usr/bin/vdirsyncer sync exchange_to_local
+ExecStart=/usr/bin/vdirsyncer sync icloud_privat_to_local
 ExecStartPost=/usr/local/bin/anonymize_and_merge.sh
-ExecStartPost=/usr/bin/vdirsyncer sync merged_to_icloud --force-delete
+ExecStartPost=-/usr/bin/vdirsyncer sync merged_to_icloud

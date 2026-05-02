@@ -11,6 +11,13 @@ type = "http"
 url = "{{ sops.vdirsyncer.exchange.url }}"
 read_only = true
 
+[storage icloud_privat]
+type = "caldav"
+url = "{{ sops.vdirsyncer.icloud.url }}"
+username = "{{ sops.vdirsyncer.icloud.username }}"
+password.fetch = ["command", "printenv", "ICLOUD_PASS"]
+read_only = true
+
 [storage local_datashare]
 type = "filesystem"
 path = "/var/lib/vdirsyncer/local_datashare/"
@@ -19,6 +26,11 @@ fileext = ".ics"
 [storage local_exchange]
 type = "filesystem"
 path = "/var/lib/vdirsyncer/local_exchange/"
+fileext = ".ics"
+
+[storage local_icloud_privat]
+type = "filesystem"
+path = "/var/lib/vdirsyncer/local_icloud_privat/"
 fileext = ".ics"
 
 [storage merged]
@@ -42,6 +54,12 @@ conflict_resolution = "a wins"
 a = "exchange"
 b = "local_exchange"
 collections = null
+conflict_resolution = "a wins"
+
+[pair icloud_privat_to_local]
+a = "icloud_privat"
+b = "local_icloud_privat"
+collections = [["icloud_privat", "{{ sops.vdirsyncer.icloud_privat.sourcecal }}", "default"]]
 conflict_resolution = "a wins"
 
 [pair merged_to_icloud]
