@@ -72,16 +72,33 @@ def process_source(prefix, src, out_dir):
         content = re.sub(r"\r?\n\r?\n+", "\r\n", content)
         (out_dir / name).write_bytes(content.encode("utf-8"))
 
-    for old in out_dir.glob("*.ics"):
-        if old.name not in expected:
-            old.unlink()
+    return expected, current_keys
 
-    return current_keys
-
+work_expected = set()
+private_expected = set()
 all_current_keys = set()
-all_current_keys.update(process_source("ds", src_ds, work_dir))
-all_current_keys.update(process_source("ex", src_ex, work_dir))
-all_current_keys.update(process_source("ip", src_ip, private_dir))
+
+exp, keys = process_source("ds", src_ds, work_dir)
+work_expected.update(exp)
+all_current_keys.update(keys)
+
+exp, keys = process_source("ex", src_ex, work_dir)
+work_expected.update(exp)
+all_current_keys.update(keys)
+
+exp, keys = process_source("ip", src_ip, private_dir)
+private_expected.update(exp)
+all_current_keys.update(keys)
+
+# Remove stale files from work_dir
+for old in work_dir.glob("*.ics"):
+    if old.name not in work_expected:
+        old.unlink()
+
+# Remove stale files from private_dir
+for old in private_dir.glob("*.ics"):
+    if old.name not in private_expected:
+        old.unlink()
 
 for orphaned_key in list(uid_map.keys()):
     if orphaned_key not in all_current_keys:
