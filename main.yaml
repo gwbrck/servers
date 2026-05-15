@@ -28,6 +28,7 @@
           mealie: "{{ sops_raw.mealie | default({}, true) }}"
           uptime_kuma: "{{ sops_raw.uptime_kuma | default({}, true) }}"
           vdirsyncer: "{{ sops_raw.vdirsyncer | default({}, true) }}"
+          adguardhome: "{{ sops_raw.adguardhome | default({}, true) }}"
 
 - name: System Defaults
   hosts: all
@@ -151,6 +152,13 @@
   tags: [uptime_kuma]
   roles:
     - uptime_kuma
+
+- name: Setup AdGuardHome
+  hosts: homeeins-1
+  become: true
+  tags: [adguardhome]
+  roles:
+    - adguardhome
 
 - name: Setup restic backups
   hosts: homeeins-1

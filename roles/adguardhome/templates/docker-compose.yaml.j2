@@ -1,0 +1,28 @@
+services:
+  adguardhome:
+    image: adguard/adguardhome:latest
+    container_name: "adguardhome"
+    restart: unless-stopped
+    environment:
+      - TZ={{ default_timezone }}
+    volumes:
+      - "{{ adguardhome_data_dir }}/work:/opt/adguardhome/work"
+      - "{{ adguardhome_data_dir }}/conf:/opt/adguardhome/conf"
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "3000:3000/tcp"
+    labels:
+      - "traefik.enable={{ adguardhome_traefik_enable | default(true) | ternary('true', 'false') }}"
+      - "traefik.docker.network={{ adguardhome_traefik_network }}"
+      - "traefik.http.routers.{{ adguardhome_traefik_router_name }}.rule=Host(`{{ adguardhome_public_url }}`)"
+      - "traefik.http.routers.{{ adguardhome_traefik_router_name }}.entrypoints=websecure"
+      - "traefik.http.routers.{{ adguardhome_traefik_router_name }}.tls.certresolver={{ adguardhome_traefik_cert_resolver }}"
+      - "traefik.http.services.{{ adguardhome_traefik_router_name }}.loadbalancer.server.port=80"
+    networks:
+      - "{{ adguardhome_traefik_network }}"
+
+networks:
+  {{ adguardhome_traefik_network }}:
+    name: {{ adguardhome_traefik_network }}
+    external: true

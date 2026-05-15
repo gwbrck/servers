@@ -1,0 +1,10 @@
+---
+adguardhome_compose_dir: "{{ services_compose_base }}/adguardhome"
+adguardhome_compose_file: "{{ default_compose_file }}"
+adguardhome_data_dir: "{{ services_data_base }}/adguardhome"
+
+adguardhome_public_url: "{{ sops.adguardhome.domain }}"
+adguardhome_traefik_enable: true
+adguardhome_traefik_network: "{{ traefik_network }}"
+adguardhome_traefik_router_name: "adguardhome"
+adguardhome_traefik_cert_resolver: "{{ traefik_cert_resolver }}"

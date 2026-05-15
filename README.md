@@ -48,6 +48,10 @@ ansible-playbook main.yaml --list-tags
 | OpenCloud | `opencloud` | Cloud-Speicher |
 | Actual Budget | `actual_budget` | Finanz-Tracking |
 | FreshRSS | `freshrss` | RSS-Reader |
+| Immich | `immich` | Foto-Verwaltung |
+| Mealie | `mealie` | Rezept-Verwaltung |
+| Uptime Kuma | `uptime_kuma` | Monitoring |
+| AdGuardHome | `adguardhome` | DNS-Filter und Werbeblocker |
 | Restic Backup | `restic_backup` | Backups auf Hetzner S3 |
 | Tailscale | `tailscale` | VPN-Mesh-Netzwerk |
 

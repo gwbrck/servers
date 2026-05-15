@@ -20,6 +20,7 @@ groups:
       - immich
       - mealie
       - uptime_kuma
+      - adguardhome
     schedules:
       backup:
         at: "*-*-* 03:30:00"
@@ -39,6 +40,7 @@ groups:
       - immich
       - mealie
       - uptime_kuma
+      - adguardhome
     schedules:
       check:
         at: "Sun *-*-* 04:30:00"
@@ -229,6 +231,16 @@ profiles:
       send-after:
         - method: GET
           url: {{ restic_backup_uptime_kuma_push_url }}
+
+  adguardhome:
+    inherit: default
+    run-before:
+      - "docker compose -f {{ services_compose_base }}/adguardhome/{{ default_compose_file }} stop adguardhome"
+    run-after:
+      - "docker compose -f {{ services_compose_base }}/adguardhome/{{ default_compose_file }} start adguardhome"
+    backup:
+      source:
+        - "{{ services_data_base }}/adguardhome"
 
 
 
