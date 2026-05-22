@@ -69,6 +69,9 @@ def process_source(prefix, src, out_dir):
         expected.add(name)
         (out_dir / name).write_bytes(cleaned.encode("utf-8"))
 
+    return expected
+
+def cleanup_dir(out_dir, expected):
     for old in list(out_dir.glob("*.ics")):
         if old.name not in expected:
             old.unlink()
@@ -76,7 +79,10 @@ def process_source(prefix, src, out_dir):
 work_expected = set()
 private_expected = set()
 
-process_source("ds", src_ds, work_dir)
-process_source("ex", src_ex, work_dir)
-process_source("ip", src_ip, private_dir)
+work_expected.update(process_source("ds", src_ds, work_dir))
+work_expected.update(process_source("ex", src_ex, work_dir))
+private_expected.update(process_source("ip", src_ip, private_dir))
+
+cleanup_dir(work_dir, work_expected)
+cleanup_dir(private_dir, private_expected)
 PY
