@@ -7,8 +7,10 @@ url = "{{ sops.vdirsyncer.datashare.url }}"
 read_only = true
 
 [storage exchange]
-type = "http"
+type = "caldav"
 url = "{{ sops.vdirsyncer.exchange.url }}"
+username = "{{ sops.vdirsyncer.exchange.username | replace('\\', '\\\\') }}"
+password.fetch = ["command", "printenv", "EXCHANGE_PASS"]
 read_only = true
 
 [storage icloud_source]
