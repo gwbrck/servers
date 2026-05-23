@@ -4,9 +4,7 @@ services:
     container_name: "opencloud"
     user: "{{ opencloud_uid_gid }}"
     restart: unless-stopped
-    entrypoint:
-      - /bin/sh
-    command: ["-c", "opencloud init || true; opencloud server"]
+    command: ["server"]
     env_file: .env
     volumes:
       - "{{ opencloud_config_dir }}:/etc/opencloud"
