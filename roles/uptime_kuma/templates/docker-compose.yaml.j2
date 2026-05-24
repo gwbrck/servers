@@ -5,6 +5,7 @@ services:
     restart: unless-stopped
     volumes:
       - "{{ uptime_kuma_data_dir }}:/app/data"
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
       - "traefik.enable={{ uptime_kuma_traefik_enable | default(true) | ternary('true', 'false') }}"
       - "traefik.docker.network={{ uptime_kuma_traefik_network }}"

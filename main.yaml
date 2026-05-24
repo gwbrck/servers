@@ -160,6 +160,13 @@
   roles:
     - adguardhome
 
+- name: Setup System Monitor
+  hosts: homeeins-1
+  become: true
+  tags: [system_monitor]
+  roles:
+    - system_monitor
+
 - name: Setup restic backups
   hosts: homeeins-1
   become: true

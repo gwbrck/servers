@@ -1,0 +1,30 @@
+#!/bin/bash
+# Checks: disk (/ and /srv), memory. Sends ntfy on threshold breach.
+# Cron: */5 * * * *
+
+NTFY_TOKEN="{{ sops.ntfy.backup_token }}"
+NTFY_URL="https://{{ ntfy_public_url }}/system"
+
+# ── Disk ──
+for path in / /srv; do
+  pct=$(df -h "$path" 2>/dev/null | awk 'NR==2 {gsub(/%/,""); print $(NF-1)}')
+  if [[ -n "$pct" ]] && (( pct >= 80 )); then
+    curl -sf -H "Authorization: Bearer $NTFY_TOKEN" \
+         -H "Priority: 4" -H "Title: Disk Warnung" \
+         -H "Tags: warning" \
+         -d "$path ist ${pct}% voll" "$NTFY_URL" > /dev/null 2>&1
+  fi
+done
+
+# ── Memory ──
+mem_avail=$(awk '/^MemAvailable:/ {print $2}' /proc/meminfo)
+mem_total=$(awk '/^MemTotal:/   {print $2}' /proc/meminfo)
+if [[ -n "$mem_total" ]] && [[ "$mem_total" -gt 0 ]]; then
+  mem_pct=$(( (mem_total - mem_avail) * 100 / mem_total ))
+  if (( mem_pct >= 85 )); then
+    curl -sf -H "Authorization: Bearer $NTFY_TOKEN" \
+         -H "Priority: 4" -H "Title: Memory Warnung" \
+         -H "Tags: warning" \
+         -d "Memory ${mem_pct}% ausgelastet" "$NTFY_URL" > /dev/null 2>&1
+  fi
+fi

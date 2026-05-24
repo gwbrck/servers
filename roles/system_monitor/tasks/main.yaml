@@ -1,0 +1,18 @@
+---
+- name: Deploy system check script
+  ansible.builtin.template:
+    src: check-system.sh.j2
+    dest: "{{ system_bin_dir }}/check-system.sh"
+    owner: root
+    group: root
+    mode: "0750"
+  become: true
+
+- name: Add cron job for system monitoring
+  ansible.builtin.cron:
+    name: "check-system"
+    job: "{{ system_bin_dir }}/check-system.sh"
+    minute: "*/5"
+    user: root
+    state: present
+  become: true
