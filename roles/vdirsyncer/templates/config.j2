@@ -1,11 +1,6 @@
 [general]
 status_path = "/var/lib/vdirsyncer/.vdirsyncer/status/"
 
-[storage datashare]
-type = "caldav"
-url = "{{ sops.vdirsyncer.datashare.url }}"
-read_only = true
-
 [storage exchange]
 type = "caldav"
 url = "{{ sops.vdirsyncer.exchange.url }}"
@@ -13,54 +8,21 @@ username = "{{ sops.vdirsyncer.exchange.username | replace('\\', '\\\\') }}"
 password.fetch = ["command", "printenv", "EXCHANGE_PASS"]
 read_only = true
 
-[storage icloud_source]
+[storage datashare]
 type = "caldav"
-url = "{{ sops.vdirsyncer.icloud.url }}"
-username = "{{ sops.vdirsyncer.icloud.username }}"
-password.fetch = ["command", "printenv", "ICLOUD_PASS"]
-
-[storage icloud_work]
-type = "caldav"
-url = "{{ sops.vdirsyncer.icloud.url }}"
-username = "{{ sops.vdirsyncer.icloud.username }}"
-password.fetch = ["command", "printenv", "ICLOUD_PASS"]
-
-[storage icloud_private]
-type = "caldav"
-url = "{{ sops.vdirsyncer.icloud.url }}"
-username = "{{ sops.vdirsyncer.icloud.username }}"
-password.fetch = ["command", "printenv", "ICLOUD_PASS"]
-
-[storage local_datashare]
-type = "filesystem"
-path = "/var/lib/vdirsyncer/local_datashare/"
-fileext = ".ics"
+url = "{{ sops.vdirsyncer.datashare.url }}"
+username = "{{ sops.vdirsyncer.datashare.username }}"
+password.fetch = ["command", "printenv", "DATASHARE_PASS"]
 
 [storage local_exchange]
 type = "filesystem"
 path = "/var/lib/vdirsyncer/local_exchange/"
 fileext = ".ics"
 
-[storage local_icloud_privat]
+[storage availability]
 type = "filesystem"
-path = "/var/lib/vdirsyncer/local_icloud_privat/"
+path = "/var/lib/vdirsyncer/availability/"
 fileext = ".ics"
-
-[storage availability_work]
-type = "filesystem"
-path = "/var/lib/vdirsyncer/availability_work/"
-fileext = ".ics"
-
-[storage availability_private]
-type = "filesystem"
-path = "/var/lib/vdirsyncer/availability_private/"
-fileext = ".ics"
-
-[pair datashare_to_local]
-a = "datashare"
-b = "local_datashare"
-collections = null
-conflict_resolution = "a wins"
 
 [pair exchange_to_local]
 a = "exchange"
@@ -68,20 +30,8 @@ b = "local_exchange"
 collections = null
 conflict_resolution = "a wins"
 
-[pair icloud_privat_to_local]
-a = "icloud_source"
-b = "local_icloud_privat"
-collections = [["icloud_privat", "{{ sops.vdirsyncer.icloud.sourcecal_privat }}", "default"]]
-conflict_resolution = "a wins"
-
-[pair availability_work_to_icloud]
-a = "availability_work"
-b = "icloud_work"
-collections = [["availability_work_to_icloud", null, "{{ sops.vdirsyncer.icloud.targetcal_work }}"]]
-conflict_resolution = "a wins"
-
-[pair availability_private_to_icloud]
-a = "availability_private"
-b = "icloud_private"
-collections = [["availability_private_to_icloud", null, "{{ sops.vdirsyncer.icloud.targetcal_private }}"]]
+[pair availability_to_datashare]
+a = "availability"
+b = "datashare"
+collections = [["availability_to_datashare", null, null]]
 conflict_resolution = "a wins"

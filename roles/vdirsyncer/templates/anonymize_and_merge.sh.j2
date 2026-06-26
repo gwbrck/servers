@@ -1,22 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DATASHARE_DIR="/var/lib/vdirsyncer/local_datashare"
 EXCHANGE_DIR="/var/lib/vdirsyncer/local_exchange"
-ICLOUD_PRIVAT_DIR="/var/lib/vdirsyncer/local_icloud_privat"
-WORK_DIR="/var/lib/vdirsyncer/availability_work"
-PRIVATE_DIR="/var/lib/vdirsyncer/availability_private"
+AVAIL_DIR="/var/lib/vdirsyncer/availability"
 
-mkdir -p "$WORK_DIR" "$PRIVATE_DIR"
+mkdir -p "$AVAIL_DIR"
 
-python3 - "$DATASHARE_DIR" "$EXCHANGE_DIR" "$ICLOUD_PRIVAT_DIR" "$WORK_DIR" "$PRIVATE_DIR" <<'PY'
+python3 - "$EXCHANGE_DIR" "$AVAIL_DIR" <<'PY'
 import pathlib, re, sys
 
-src_ds = pathlib.Path(sys.argv[1])
-src_ex = pathlib.Path(sys.argv[2])
-src_ip = pathlib.Path(sys.argv[3])
-work_dir = pathlib.Path(sys.argv[4])
-private_dir = pathlib.Path(sys.argv[5])
+src_ex = pathlib.Path(sys.argv[1])
+avail_dir = pathlib.Path(sys.argv[2])
 
 STRIP = re.compile(
     r"^(SUMMARY|DESCRIPTION|LOCATION|ATTENDEE|ORGANIZER)"
@@ -76,13 +70,6 @@ def cleanup_dir(out_dir, expected):
         if old.name not in expected:
             old.unlink()
 
-work_expected = set()
-private_expected = set()
-
-work_expected.update(process_source("ds", src_ds, work_dir))
-work_expected.update(process_source("ex", src_ex, work_dir))
-private_expected.update(process_source("ip", src_ip, private_dir))
-
-cleanup_dir(work_dir, work_expected)
-cleanup_dir(private_dir, private_expected)
+expected = process_source("ex", src_ex, avail_dir)
+cleanup_dir(avail_dir, expected)
 PY
