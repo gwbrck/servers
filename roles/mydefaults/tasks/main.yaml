@@ -29,3 +29,32 @@
     password: "{{ sops.mydefaults.password_hashed | default('', true) }}"
     password_lock: true
   when: ansible_facts.user_id != 'root'
+
+- name: "Set up qemu-guest-agent on QEMU/KVM guests"
+  when:
+    - ansible_facts.virtualization_role == 'guest'
+    - ansible_facts.virtualization_type in ['kvm', 'qemu']
+  block:
+    - name: "Install qemu-guest-agent"
+      ansible.builtin.apt:
+        name: qemu-guest-agent
+        state: present
+        update_cache: true
+
+    - name: "Enable qemu-guest-agent"
+      ansible.builtin.systemd:
+        name: qemu-guest-agent
+        enabled: true
+
+    # The service Requires= the virtio-serial channel, which only exists once
+    # the agent is enabled on the Proxmox host AND the VM has been stopped/started.
+    # Until then a start fails with a dependency-job error, which we tolerate; the
+    # udev rule starts the service automatically once the channel appears.
+    - name: "Start qemu-guest-agent if the virtio channel is present"
+      ansible.builtin.systemd:
+        name: qemu-guest-agent
+        state: started
+      register: qga_start
+      failed_when:
+        - qga_start is failed
+        - "'dependency job' not in (qga_start.msg | default(''))"
