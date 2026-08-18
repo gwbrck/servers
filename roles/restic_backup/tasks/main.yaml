@@ -8,6 +8,31 @@
     state: present
     update_cache: true
 
+- name: Check python virtual environment
+  ansible.builtin.stat:
+    path: "{{ restic_backup_venv_dir }}/bin/python3"
+  register: restic_backup_venv_python
+
+- name: Check pip in python virtual environment
+  ansible.builtin.command:
+    argv:
+      - "{{ restic_backup_venv_dir }}/bin/python3"
+      - -m
+      - pip
+      - --version
+  register: restic_backup_venv_pip
+  changed_when: false
+  failed_when: false
+  when: restic_backup_venv_python.stat.exists
+
+- name: Remove broken python virtual environment
+  ansible.builtin.file:
+    path: "{{ restic_backup_venv_dir }}"
+    state: absent
+  when: >-
+    not restic_backup_venv_python.stat.exists or
+    (restic_backup_venv_pip.rc | default(1)) != 0
+
 - name: Install python dependencies
   ansible.builtin.pip:
     name: github3.py
