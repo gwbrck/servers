@@ -1,0 +1,61 @@
+---
+- name: Validate Zotero MCP configuration
+  no_log: true
+  ansible.builtin.assert:
+    that:
+      - zotero_mcp_public_url | length > 0
+      - zotero_mcp_api_key | length > 0
+      - zotero_mcp_library_id | string | length > 0
+      - zotero_mcp_embedding_api_key | length > 0
+      - zotero_mcp_embedding_model | length > 0
+      - zotero_mcp_embedding_base_url | length > 0
+    fail_msg: "Configure the Zotero MCP domain and Zotero credentials, and the KiwiFS embedding settings in SOPS."
+
+- name: Ensure Zotero MCP compose directory exists
+  ansible.builtin.file:
+    path: "{{ zotero_mcp_compose_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Ensure Zotero MCP data directory exists
+  ansible.builtin.file:
+    path: "{{ zotero_mcp_data_dir }}"
+    state: directory
+    owner: "{{ zotero_mcp_uid }}"
+    group: "{{ zotero_mcp_gid }}"
+    mode: "0750"
+
+- name: Deploy Zotero MCP environment file
+  no_log: true
+  ansible.builtin.template:
+    src: zotero_mcp.env.j2
+    dest: "{{ zotero_mcp_compose_dir }}/.env"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart Zotero MCP
+
+- name: Deploy Zotero MCP Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ zotero_mcp_compose_dir }}/{{ zotero_mcp_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart Zotero MCP
+
+- name: Pull images
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ zotero_mcp_compose_dir }}"
+
+- name: Create and start services
+  community.docker.docker_compose_v2:
+    project_src: "{{ zotero_mcp_compose_dir }}"
+  register: zotero_mcp_output
+
+- name: Show results
+  ansible.builtin.debug:
+    var: zotero_mcp_output
+    verbosity: 1

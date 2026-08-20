@@ -1,0 +1,30 @@
+services:
+  zotero-mcp:
+    image: "{{ zotero_mcp_image }}:{{ zotero_mcp_tag }}"
+    container_name: "zotero-mcp"
+    restart: unless-stopped
+    env_file: .env
+    command:
+      - serve
+      - --transport
+      - streamable-http
+      - --host
+      - 0.0.0.0
+      - --port
+      - "{{ zotero_mcp_port }}"
+    volumes:
+      - "{{ zotero_mcp_data_dir }}:/home/app/.config/zotero-mcp"
+    labels:
+      - "traefik.enable={{ zotero_mcp_traefik_enable | default(true) | ternary('true', 'false') }}"
+      - "traefik.docker.network={{ zotero_mcp_traefik_network }}"
+      - "traefik.http.routers.{{ zotero_mcp_traefik_router_name }}.rule=Host(`{{ zotero_mcp_public_url }}`)"
+      - "traefik.http.routers.{{ zotero_mcp_traefik_router_name }}.entrypoints=websecure"
+      - "traefik.http.routers.{{ zotero_mcp_traefik_router_name }}.tls.certresolver={{ zotero_mcp_traefik_cert_resolver }}"
+      - "traefik.http.services.{{ zotero_mcp_traefik_router_name }}.loadbalancer.server.port={{ zotero_mcp_port }}"
+    networks:
+      - "{{ zotero_mcp_traefik_network }}"
+
+networks:
+  {{ zotero_mcp_traefik_network }}:
+    name: {{ zotero_mcp_traefik_network }}
+    external: true

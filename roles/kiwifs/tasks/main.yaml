@@ -1,0 +1,71 @@
+---
+- name: Validate KiwiFS configuration
+  no_log: true
+  ansible.builtin.assert:
+    that:
+      - kiwifs_public_url | length > 0
+      - kiwifs_webdav_public_url | length > 0
+      - kiwifs_webdav_password | length > 0
+      - kiwifs_embedding_api_key | length > 0
+      - kiwifs_embedding_provider in ['mistral', 'openai']
+    fail_msg: "Configure the KiwiFS and WebDAV domains, WebDAV password, and embedding provider in SOPS."
+
+- name: Ensure KiwiFS compose directory exists
+  ansible.builtin.file:
+    path: "{{ kiwifs_compose_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Ensure KiwiFS data directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ kiwifs_uid }}"
+    group: "{{ kiwifs_gid }}"
+    mode: "0750"
+  loop:
+    - "{{ kiwifs_data_dir }}"
+    - "{{ kiwifs_config_dir }}"
+
+- name: Deploy KiwiFS configuration
+  ansible.builtin.template:
+    src: config.toml.j2
+    dest: "{{ kiwifs_config_dir }}/config.toml"
+    owner: "{{ kiwifs_uid }}"
+    group: "{{ kiwifs_gid }}"
+    mode: "0640"
+  notify: Restart KiwiFS
+
+- name: Deploy KiwiFS environment file
+  no_log: true
+  ansible.builtin.template:
+    src: kiwifs.env.j2
+    dest: "{{ kiwifs_compose_dir }}/.env"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart KiwiFS
+
+- name: Deploy KiwiFS Docker Compose file
+  ansible.builtin.template:
+    src: docker-compose.yaml.j2
+    dest: "{{ kiwifs_compose_dir }}/{{ kiwifs_compose_file }}"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Pull images
+  community.docker.docker_compose_v2_pull:
+    project_src: "{{ kiwifs_compose_dir }}"
+
+- name: Create and start services
+  community.docker.docker_compose_v2:
+    project_src: "{{ kiwifs_compose_dir }}"
+  register: kiwifs_output
+
+- name: Show results
+  ansible.builtin.debug:
+    var: kiwifs_output
+    verbosity: 1

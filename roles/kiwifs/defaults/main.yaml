@@ -1,0 +1,33 @@
+---
+kiwifs_compose_dir: "{{ services_compose_base }}/kiwifs"
+kiwifs_compose_file: "{{ default_compose_file }}"
+kiwifs_data_dir: "{{ services_data_base }}/kiwifs"
+kiwifs_config_dir: "{{ kiwifs_data_dir }}/.kiwi"
+
+kiwifs_image: "ameliaanhlam/kiwifs"
+kiwifs_tag: "0.19.60"
+kiwifs_uid: "100"
+kiwifs_gid: "101"
+
+kiwifs_public_url: "{{ sops.kiwifs.domain }}"
+kiwifs_webdav_public_url: "{{ sops.kiwifs.webdav_domain }}"
+kiwifs_webdav_password: "{{ sops.kiwifs.webdav_password }}"
+kiwifs_webdav_port: 3335
+
+kiwifs_embedding_provider: "{{ sops.kiwifs.embedding.provider | default('mistral', true) }}"
+kiwifs_embedding_api_key: "{{ sops.kiwifs.embedding.api_key }}"
+kiwifs_embedding_model: >-
+  {{ sops.kiwifs.embedding.model | default(
+    (kiwifs_embedding_provider == 'mistral') | ternary('mistral-embed', 'text-embedding-3-small'), true) }}
+kiwifs_embedding_base_url: >-
+  {{ sops.kiwifs.embedding.base_url | default(
+    (kiwifs_embedding_provider == 'mistral') | ternary('https://api.mistral.ai', 'https://api.openai.com'), true) }}
+kiwifs_embedding_dimensions: >-
+  {{ sops.kiwifs.embedding.dimensions | default(
+    (kiwifs_embedding_provider == 'mistral') | ternary(1024, 1536), true) }}
+
+kiwifs_traefik_enable: true
+kiwifs_traefik_network: "{{ traefik_network }}"
+kiwifs_traefik_router_name: "kiwifs"
+kiwifs_webdav_traefik_router_name: "kiwifs-webdav"
+kiwifs_traefik_cert_resolver: "{{ traefik_cert_resolver }}"

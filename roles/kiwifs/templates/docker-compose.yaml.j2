@@ -1,0 +1,39 @@
+services:
+  kiwifs:
+    image: "{{ kiwifs_image }}:{{ kiwifs_tag }}"
+    container_name: "kiwifs"
+    restart: unless-stopped
+    env_file: .env
+    command:
+      - serve
+      - --root=/data
+      - --webdav
+      - --webdav-port={{ kiwifs_webdav_port }}
+      - --api-key=${KIWIFS_WEBDAV_PASSWORD}
+    volumes:
+      - "{{ kiwifs_data_dir }}:/data"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3333/readyz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    labels:
+      - "traefik.enable={{ kiwifs_traefik_enable | default(true) | ternary('true', 'false') }}"
+      - "traefik.docker.network={{ kiwifs_traefik_network }}"
+      - "traefik.http.routers.{{ kiwifs_traefik_router_name }}.rule=Host(`{{ kiwifs_public_url }}`)"
+      - "traefik.http.routers.{{ kiwifs_traefik_router_name }}.entrypoints=websecure"
+      - "traefik.http.routers.{{ kiwifs_traefik_router_name }}.tls.certresolver={{ kiwifs_traefik_cert_resolver }}"
+      - "traefik.http.routers.{{ kiwifs_traefik_router_name }}.service={{ kiwifs_traefik_router_name }}"
+      - "traefik.http.services.{{ kiwifs_traefik_router_name }}.loadbalancer.server.port=3333"
+      - "traefik.http.routers.{{ kiwifs_webdav_traefik_router_name }}.rule=Host(`{{ kiwifs_webdav_public_url }}`)"
+      - "traefik.http.routers.{{ kiwifs_webdav_traefik_router_name }}.entrypoints=websecure"
+      - "traefik.http.routers.{{ kiwifs_webdav_traefik_router_name }}.tls.certresolver={{ kiwifs_traefik_cert_resolver }}"
+      - "traefik.http.routers.{{ kiwifs_webdav_traefik_router_name }}.service={{ kiwifs_webdav_traefik_router_name }}"
+      - "traefik.http.services.{{ kiwifs_webdav_traefik_router_name }}.loadbalancer.server.port={{ kiwifs_webdav_port }}"
+    networks:
+      - "{{ kiwifs_traefik_network }}"
+
+networks:
+  {{ kiwifs_traefik_network }}:
+    name: {{ kiwifs_traefik_network }}
+    external: true

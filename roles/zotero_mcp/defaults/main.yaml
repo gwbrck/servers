@@ -1,0 +1,23 @@
+---
+zotero_mcp_compose_dir: "{{ services_compose_base }}/zotero_mcp"
+zotero_mcp_compose_file: "{{ default_compose_file }}"
+zotero_mcp_data_dir: "{{ services_data_base }}/zotero_mcp"
+
+zotero_mcp_image: "ghcr.io/54yyyu/zotero-mcp"
+zotero_mcp_tag: "latest"
+zotero_mcp_uid: "1000"
+zotero_mcp_gid: "1000"
+zotero_mcp_port: 8000
+
+zotero_mcp_public_url: "{{ sops.zotero_mcp.domain }}"
+zotero_mcp_api_key: "{{ sops.zotero_mcp.api_key }}"
+zotero_mcp_library_id: "{{ sops.zotero_mcp.library_id }}"
+zotero_mcp_embedding_api_key: "{{ sops.kiwifs.embedding.api_key }}"
+zotero_mcp_embedding_model: "{{ sops.kiwifs.embedding.model | default('mistral-embed', true) }}"
+zotero_mcp_embedding_base_url: >-
+  {{ (sops.kiwifs.embedding.base_url | default('https://api.mistral.ai', true) | regex_replace('/+$', '')) ~ '/v1' }}
+
+zotero_mcp_traefik_enable: true
+zotero_mcp_traefik_network: "{{ traefik_network }}"
+zotero_mcp_traefik_router_name: "zotero-mcp"
+zotero_mcp_traefik_cert_resolver: "{{ traefik_cert_resolver }}"

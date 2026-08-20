@@ -52,6 +52,8 @@ ansible-playbook main.yaml --list-tags
 | Mealie | `mealie` | Rezept-Verwaltung |
 | Uptime Kuma | `uptime_kuma` | Monitoring |
 | AdGuardHome | `adguardhome` | DNS-Filter und Werbeblocker |
+| KiwiFS | `kiwifs` | Markdown-Wissensbasis mit Vektorsuche und WebDAV |
+| Zotero MCP | `zotero_mcp` | MCP-Zugriff auf die Zotero-Bibliothek mit semantischer Suche |
 | Restic Backup | `restic_backup` | Backups auf Hetzner S3 |
 | Tailscale | `tailscale` | VPN-Mesh-Netzwerk |
 
@@ -74,6 +76,40 @@ roles/
 
 Alle Secrets werden via SOPS verwaltet und liegen **nicht** im Repository.
 Die verschluesselte Datei wird beim Start von `main.yaml` entschluesselt und als `sops`-Variable an alle Rollen weitergegeben.
+
+Fuer KiwiFS wird folgende Sektion benoetigt. `embedding.provider` kann `mistral` oder `openai` sein; Modell, Basis-URL und Dimensionen werden passend vorbelegt.
+
+```yaml
+kiwifs:
+  domain: "kiwifs.example.com"
+  webdav_domain: "dav.kiwifs.example.com"
+  webdav_password: "..."
+  embedding:
+    provider: "mistral"
+    api_key: "..."
+    # model: "mistral-embed"
+    # base_url: "https://api.mistral.ai"
+    # dimensions: 1024
+```
+
+Das KiwiFS-WebDAV-Laufwerk ist innerhalb des Tailnets im Finder ueber `Cmd+K` erreichbar:
+
+```text
+https://dav.kiwifs.example.com/
+```
+
+Als Benutzername kann `kiwifs` verwendet werden; das Passwort ist `kiwifs.webdav_password` aus SOPS.
+
+Fuer Zotero MCP werden Domain und Zotero-Web-API-Zugangsdaten benoetigt. Die Mistral-Einstellungen aus `kiwifs.embedding` werden fuer die OpenAI-kompatible Embedding-Schnittstelle wiederverwendet.
+
+```yaml
+zotero_mcp:
+  domain: "zotero.example.com"
+  api_key: "..."
+  library_id: "..."
+```
+
+Der Streamable-HTTP-Endpunkt ist unter `https://zotero.example.com/mcp` erreichbar.
 
 ## Konventionen
 

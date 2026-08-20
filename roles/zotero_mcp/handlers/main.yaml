@@ -1,0 +1,5 @@
+---
+- name: Restart Zotero MCP
+  community.docker.docker_compose_v2:
+    project_src: "{{ zotero_mcp_compose_dir }}"
+    state: restarted

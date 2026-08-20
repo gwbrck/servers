@@ -1,0 +1,26 @@
+[server]
+host = "0.0.0.0"
+port = 3333
+public_url = "https://{{ kiwifs_public_url }}"
+
+[search]
+engine = "sqlite"
+
+[search.vector]
+enabled = true
+
+[search.vector.embedder]
+provider = "openai"
+model = "{{ kiwifs_embedding_model }}"
+api_key = "${KIWIFS_EMBEDDING_API_KEY}"
+base_url = "{{ kiwifs_embedding_base_url }}"
+dimensions = {{ kiwifs_embedding_dimensions }}
+
+[search.vector.store]
+provider = "sqlite-vec"
+
+[versioning]
+strategy = "git"
+
+[auth]
+type = "none"

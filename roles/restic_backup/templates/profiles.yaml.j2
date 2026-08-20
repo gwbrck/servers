@@ -21,6 +21,8 @@ groups:
       - mealie
       - uptime_kuma
       - adguardhome
+      - kiwifs
+      - zotero_mcp
     schedules:
       backup:
         at: "*-*-* 03:30:00"
@@ -41,6 +43,8 @@ groups:
       - mealie
       - uptime_kuma
       - adguardhome
+      - kiwifs
+      - zotero_mcp
     schedules:
       check:
         at: "Sun *-*-* 04:30:00"
@@ -228,9 +232,6 @@ profiles:
     backup:
       source:
         - "{{ services_data_base }}/mealie/data"
-      send-after:
-        - method: GET
-          url: {{ restic_backup_uptime_kuma_push_url }}
 
   adguardhome:
     inherit: default
@@ -242,5 +243,26 @@ profiles:
       source:
         - "{{ services_data_base }}/adguardhome"
 
+  kiwifs:
+    inherit: default
+    run-before:
+      - "docker compose -f {{ services_compose_base }}/kiwifs/{{ default_compose_file }} stop kiwifs"
+    run-after:
+      - "docker compose -f {{ services_compose_base }}/kiwifs/{{ default_compose_file }} start kiwifs"
+    backup:
+      source:
+        - "{{ services_data_base }}/kiwifs"
 
+  zotero_mcp:
+    inherit: default
+    run-before:
+      - "docker compose -f {{ services_compose_base }}/zotero_mcp/{{ default_compose_file }} stop zotero-mcp"
+    run-after:
+      - "docker compose -f {{ services_compose_base }}/zotero_mcp/{{ default_compose_file }} start zotero-mcp"
+    backup:
+      source:
+        - "{{ services_data_base }}/zotero_mcp"
+      send-after:
+        - method: GET
+          url: {{ restic_backup_uptime_kuma_push_url }}
 

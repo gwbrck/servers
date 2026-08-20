@@ -1,7 +1,7 @@
 - name: Load SOPS secrets
   hosts: localhost
   gather_facts: false
-  tags: sops
+  tags: [always, sops]
   vars:
     sops_file: "{{ lookup('env', 'HOME') }}/OpenCloud/Dots/server_infra.yaml"
   tasks:
@@ -29,6 +29,8 @@
           uptime_kuma: "{{ sops_raw.uptime_kuma | default({}, true) }}"
           vdirsyncer: "{{ sops_raw.vdirsyncer | default({}, true) }}"
           adguardhome: "{{ sops_raw.adguardhome | default({}, true) }}"
+          kiwifs: "{{ sops_raw.kiwifs | default({}, true) }}"
+          zotero_mcp: "{{ sops_raw.zotero_mcp | default({}, true) }}"
 
 - name: System Defaults
   hosts: all
@@ -166,6 +168,20 @@
   tags: [system_monitor]
   roles:
     - system_monitor
+
+- name: Setup KiwiFS
+  hosts: homeeins-1
+  become: true
+  tags: [kiwifs]
+  roles:
+    - kiwifs
+
+- name: Setup Zotero MCP
+  hosts: homeeins-1
+  become: true
+  tags: [zotero_mcp]
+  roles:
+    - zotero_mcp
 
 - name: Setup restic backups
   hosts: homeeins-1

@@ -1,0 +1,5 @@
+---
+- name: Restart KiwiFS
+  community.docker.docker_compose_v2:
+    project_src: "{{ kiwifs_compose_dir }}"
+    state: restarted
