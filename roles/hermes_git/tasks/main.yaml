@@ -1,0 +1,130 @@
+---
+- name: Validate hermes-git public key
+  ansible.builtin.assert:
+    that:
+      - hermes_git_public_key | length > 0
+    fail_msg: "sops.hermes_git.public_key is empty. Provide the hermes-git public key via SOPS."
+
+- name: Ensure Git is installed
+  ansible.builtin.package:
+    name: git
+    state: present
+
+- name: Ensure git access group exists
+  ansible.builtin.group:
+    name: "{{ hermes_git_group }}"
+    state: present
+
+- name: Add the administrative user to the git group
+  ansible.builtin.user:
+    name: "{{ ansible_user }}"
+    groups: "{{ hermes_git_group }}"
+    append: true
+
+- name: Ensure hermes-git user exists
+  ansible.builtin.user:
+    name: "{{ hermes_git_username }}"
+    group: "{{ hermes_git_group }}"
+    home: "{{ hermes_git_home }}"
+    shell: "{{ hermes_git_shell }}"
+    create_home: true
+    password_lock: true
+    state: present
+
+- name: Ensure hermes-git SSH directory exists
+  ansible.builtin.file:
+    path: "{{ hermes_git_home }}/.ssh"
+    state: directory
+    owner: "{{ hermes_git_username }}"
+    group: "{{ hermes_git_group }}"
+    mode: "0700"
+
+- name: Install hermes-git authorized key
+  ansible.posix.authorized_key:
+    user: "{{ hermes_git_username }}"
+    key: "{{ hermes_git_public_key }}"
+    state: present
+    manage_dir: false
+    key_options: >-
+      no-pty,no-port-forwarding,no-agent-forwarding,no-X11-forwarding
+
+- name: Verify Git repository directory exists
+  ansible.builtin.stat:
+    path: "{{ hermes_git_repository_dir }}"
+  register: hermes_git_repository_dir_stat
+
+- name: Require Git repository directory
+  ansible.builtin.assert:
+    that:
+      - hermes_git_repository_dir_stat.stat.exists
+      - hermes_git_repository_dir_stat.stat.isdir
+    fail_msg: "Git repository directory does not exist: {{ hermes_git_repository_dir }}"
+
+- name: Ensure Git repository root permissions
+  ansible.builtin.file:
+    path: "{{ hermes_git_repository_dir }}"
+    group: "{{ hermes_git_group }}"
+    mode: "g+rwx,o-rwx,g+s"
+
+- name: Find bare Git repositories
+  ansible.builtin.find:
+    paths: "{{ hermes_git_repository_dir }}"
+    file_type: directory
+    recurse: false
+  register: hermes_git_repositories
+
+- name: Ensure repository root permissions
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    group: "{{ hermes_git_group }}"
+    mode: "g+rwx,o-rwx,g+s"
+  loop: "{{ hermes_git_repositories.files }}"
+
+- name: Repair group ownership throughout repositories
+  ansible.builtin.command:
+    argv:
+      - chgrp
+      - -R
+      - "{{ hermes_git_group }}"
+      - "{{ hermes_git_repository_dir }}"
+  when: hermes_git_repair_permissions | bool
+  changed_when: true
+
+- name: Repair permissions throughout repositories
+  ansible.builtin.command:
+    argv:
+      - chmod
+      - -R
+      - g+rwX,o-rwx
+      - "{{ hermes_git_repository_dir }}"
+  when: hermes_git_repair_permissions | bool
+  changed_when: true
+
+- name: Repair group inheritance on repository directories
+  ansible.builtin.command:
+    argv:
+      - find
+      - "{{ hermes_git_repository_dir }}"
+      - -type
+      - d
+      - -exec
+      - chmod
+      - g+s
+      - "{}"
+      - "+"
+  when: hermes_git_repair_permissions | bool
+  changed_when: true
+
+- name: Read shared repository setting
+  ansible.builtin.command:
+    cmd: git -C "{{ item.path }}" config --local --get core.sharedRepository
+  loop: "{{ hermes_git_repositories.files }}"
+  register: hermes_git_shared_repository_config
+  failed_when: hermes_git_shared_repository_config.rc not in [0, 1]
+  changed_when: false
+
+- name: Configure repositories for shared group access
+  ansible.builtin.command:
+    cmd: git -C "{{ item.item.path }}" config core.sharedRepository group
+  loop: "{{ hermes_git_shared_repository_config.results }}"
+  when: item.stdout | trim != 'group'

@@ -31,6 +31,7 @@
           adguardhome: "{{ sops_raw.adguardhome | default({}, true) }}"
           kiwifs: "{{ sops_raw.kiwifs | default({}, true) }}"
           zotero_mcp: "{{ sops_raw.zotero_mcp | default({}, true) }}"
+          hermes_git: "{{ sops_raw.hermes_git | default({}, true) }}"
 
 - name: System Defaults
   hosts: all
@@ -182,6 +183,13 @@
   tags: [zotero_mcp]
   roles:
     - zotero_mcp
+
+- name: Setup hermes-git
+  hosts: homeeins-1
+  become: true
+  tags: [hermes_git]
+  roles:
+    - hermes_git
 
 - name: Setup restic backups
   hosts: homeeins-1

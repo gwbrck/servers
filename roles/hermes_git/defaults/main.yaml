@@ -1,0 +1,10 @@
+---
+hermes_git_username: hermes-git
+hermes_git_group: git
+hermes_git_home: /var/lib/hermes-git
+hermes_git_repository_dir: /srv/archiv_gregor/git
+hermes_git_shell: /usr/bin/git-shell
+hermes_git_public_key: "{{ sops.hermes_git.public_key | default('', true) }}"
+
+# Enable manually to repair permissions throughout existing repositories.
+hermes_git_repair_permissions: false
