@@ -48,6 +48,16 @@
     key_options: >-
       no-pty,no-port-forwarding,no-agent-forwarding,no-X11-forwarding
 
+- name: Trust repositories managed by the administrative user
+  ansible.builtin.copy:
+    dest: "{{ hermes_git_home }}/.gitconfig"
+    owner: "{{ hermes_git_username }}"
+    group: "{{ hermes_git_group }}"
+    mode: "0644"
+    content: |
+      [safe]
+          directory = {{ hermes_git_repository_dir }}/*
+
 - name: Verify Git repository directory exists
   ansible.builtin.stat:
     path: "{{ hermes_git_repository_dir }}"
