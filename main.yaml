@@ -34,7 +34,9 @@
           hermes_git: "{{ sops_raw.hermes_git | default({}, true) }}"
 
 - name: System Defaults
-  hosts: all
+  hosts:
+    - pivpn
+    - homeeins-1
   become: true
   gather_facts: true
   vars:
@@ -204,3 +206,19 @@
   tags: [vdirsyncer]
   roles:
     - vdirsyncer
+
+- name: Deploy Hermes environment
+  hosts: hermes-vm
+  become: true
+  gather_facts: false
+  tags: [hermes]
+  vars:
+    hermes_sops_file: /Users/gwbrck/OpenCloud/Dots/hermes.sops.env
+  tasks:
+    - name: Copy encrypted Hermes environment
+      ansible.builtin.copy:
+        src: "{{ hermes_sops_file }}"
+        dest: /home/gwbrck/.config/sops/hermes.sops.env
+        owner: gwbrck
+        group: gwbrck
+        mode: "0600"
