@@ -49,7 +49,6 @@ ansible-playbook main.yaml --list-tags
 | Actual Budget | `actual_budget` | Finanz-Tracking |
 | FreshRSS | `freshrss` | RSS-Reader |
 | Immich | `immich` | Foto-Verwaltung |
-| Mealie | `mealie` | Rezept-Verwaltung |
 | Uptime Kuma | `uptime_kuma` | Monitoring |
 | AdGuardHome | `adguardhome` | DNS-Filter und Werbeblocker |
 | KiwiFS | `kiwifs` | Markdown-Wissensbasis mit Vektorsuche und WebDAV |

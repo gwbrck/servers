@@ -25,7 +25,6 @@
           immich: "{{ sops_raw.immich | default({}, true) }}"
           audiobookshelf: "{{ sops_raw.audiobookshelf | default({}, true) }}"
           actual_budget: "{{ sops_raw.actual_budget | default({}, true) }}"
-          mealie: "{{ sops_raw.mealie | default({}, true) }}"
           uptime_kuma: "{{ sops_raw.uptime_kuma | default({}, true) }}"
           vdirsyncer: "{{ sops_raw.vdirsyncer | default({}, true) }}"
           adguardhome: "{{ sops_raw.adguardhome | default({}, true) }}"
@@ -143,13 +142,6 @@
   roles:
     - immich
 
-
-- name: Setup Mealie
-  hosts: homeeins-1
-  become: true
-  tags: [mealie]
-  roles:
-    - mealie
 
 - name: Setup Uptime Kuma
   hosts: homeeins-1

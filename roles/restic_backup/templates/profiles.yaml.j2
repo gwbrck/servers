@@ -18,7 +18,6 @@ groups:
       - archiv_gregor
       - freshrss
       - immich
-      - mealie
       - uptime_kuma
       - adguardhome
       - kiwifs
@@ -40,7 +39,6 @@ groups:
       - archiv_gregor
       - freshrss
       - immich
-      - mealie
       - uptime_kuma
       - adguardhome
       - kiwifs
@@ -223,16 +221,6 @@ profiles:
         - "{{ services_data_base }}/immich/library/thumbs"
         - "{{ services_data_base }}/immich/library/encoded-video"
 
-  mealie:
-    inherit: default
-    run-before:
-      - "docker compose -f {{ services_compose_base }}/mealie/{{ default_compose_file }} stop mealie"
-    run-after:
-      - "docker compose -f {{ services_compose_base }}/mealie/{{ default_compose_file }} start mealie"
-    backup:
-      source:
-        - "{{ services_data_base }}/mealie/data"
-
   adguardhome:
     inherit: default
     run-before:
@@ -265,4 +253,3 @@ profiles:
       send-after:
         - method: GET
           url: {{ restic_backup_uptime_kuma_push_url }}
-

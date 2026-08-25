@@ -73,7 +73,7 @@ Alle Variablen folgen dem Schema `{rolle}_{zweck}`:
 
 Beides ist erlaubt:
 - **Inline** in `docker-compose.yaml.j2` unter `environment:` (bei wenigen Variablen)
-- **Separate `.env.j2`** (bei vielen Variablen, z.B. immich, mealie, opencloud, traefik, vaultwarden)
+- **Separate `.env.j2`** (bei vielen Variablen, z.B. immich, opencloud, traefik, vaultwarden)
 
 ### Backup (restic + resticprofile)
 
