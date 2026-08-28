@@ -50,7 +50,6 @@ ansible-playbook main.yaml --list-tags
 | FreshRSS | `freshrss` | RSS-Reader |
 | Immich | `immich` | Foto-Verwaltung |
 | Uptime Kuma | `uptime_kuma` | Monitoring |
-| AdGuardHome | `adguardhome` | DNS-Filter und Werbeblocker |
 | KiwiFS | `kiwifs` | Markdown-Wissensbasis mit Vektorsuche und WebDAV |
 | Zotero MCP | `zotero_mcp` | MCP-Zugriff auf die Zotero-Bibliothek mit semantischer Suche |
 | Hermes Git | `hermes_git` | Eingeschränkter SSH-Zugriff auf Bare-Git-Repositories |

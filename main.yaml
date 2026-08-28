@@ -27,7 +27,6 @@
           actual_budget: "{{ sops_raw.actual_budget | default({}, true) }}"
           uptime_kuma: "{{ sops_raw.uptime_kuma | default({}, true) }}"
           vdirsyncer: "{{ sops_raw.vdirsyncer | default({}, true) }}"
-          adguardhome: "{{ sops_raw.adguardhome | default({}, true) }}"
           kiwifs: "{{ sops_raw.kiwifs | default({}, true) }}"
           zotero_mcp: "{{ sops_raw.zotero_mcp | default({}, true) }}"
           hermes_git: "{{ sops_raw.hermes_git | default({}, true) }}"
@@ -76,6 +75,7 @@
         tailscale_tags:
           - "server"
         tailscale_args: >-
+          --accept-dns=true
           --advertise-exit-node
           --advertise-routes={{ ansible_facts.default_ipv4.network }}/{{ ansible_facts.default_ipv4.prefix }}
         tailscale_oauth_ephemeral: false
@@ -149,13 +149,6 @@
   tags: [uptime_kuma]
   roles:
     - uptime_kuma
-
-- name: Setup AdGuardHome
-  hosts: homeeins-1
-  become: true
-  tags: [adguardhome]
-  roles:
-    - adguardhome
 
 - name: Setup System Monitor
   hosts: homeeins-1

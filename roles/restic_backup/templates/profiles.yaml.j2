@@ -19,7 +19,6 @@ groups:
       - freshrss
       - immich
       - uptime_kuma
-      - adguardhome
       - kiwifs
       - zotero_mcp
     schedules:
@@ -40,7 +39,6 @@ groups:
       - freshrss
       - immich
       - uptime_kuma
-      - adguardhome
       - kiwifs
       - zotero_mcp
     schedules:
@@ -220,16 +218,6 @@ profiles:
       exclude:
         - "{{ services_data_base }}/immich/library/thumbs"
         - "{{ services_data_base }}/immich/library/encoded-video"
-
-  adguardhome:
-    inherit: default
-    run-before:
-      - "docker compose -f {{ services_compose_base }}/adguardhome/{{ default_compose_file }} stop adguardhome"
-    run-after:
-      - "docker compose -f {{ services_compose_base }}/adguardhome/{{ default_compose_file }} start adguardhome"
-    backup:
-      source:
-        - "{{ services_data_base }}/adguardhome"
 
   kiwifs:
     inherit: default
