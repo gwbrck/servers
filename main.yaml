@@ -41,7 +41,7 @@
     security_sudoers_passwordless:
       - "{{ ansible_user }}"
   roles:
-    - role: geerlingguy.security
+    - role: security
       tags: [defaults, security]
     - role: mydefaults
       tags: [defaults]

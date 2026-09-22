@@ -55,6 +55,12 @@ ansible-playbook main.yaml --list-tags
 | Hermes Git | `hermes_git` | Eingeschränkter SSH-Zugriff auf Bare-Git-Repositories |
 | Restic Backup | `restic_backup` | Backups auf Hetzner S3 |
 | Tailscale | `tailscale` | VPN-Mesh-Netzwerk |
+| Security | `security` | SSH-Haertung, Fail2ban, Sudo und automatische Updates |
+
+Die lokale Rolle `security` unterstuetzt Debian und Ubuntu. SSH, Sudo, Fail2ban
+und automatische Sicherheitsupdates werden ueber `security_*`-Variablen konfiguriert.
+Weitere OS-Familien (z. B. openSUSE) benoetigen insbesondere eine eigene
+Update-Konfiguration; die Rolle bricht dort vor Aenderungen ab.
 
 ## Struktur
 

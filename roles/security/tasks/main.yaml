@@ -1,0 +1,17 @@
+---
+- name: Ensure the operating system is supported
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.os_family == 'Debian'
+    fail_msg: "The security role supports Debian and Ubuntu. Other OS families need explicit support, including automatic updates."
+
+- name: Configure fail2ban
+  ansible.builtin.include_tasks: fail2ban.yaml
+  when: security_fail2ban_enabled | bool
+
+- name: Configure SSH and sudo
+  ansible.builtin.include_tasks: ssh.yaml
+
+- name: Configure automatic updates
+  ansible.builtin.include_tasks: autoupdate.yaml
+  when: security_autoupdate_enabled | bool

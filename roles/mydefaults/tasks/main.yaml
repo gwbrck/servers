@@ -22,13 +22,13 @@
     password: "{{ sops.mydefaults.password_hashed | default('', true) }}"
     password_lock: true
 
-- name: "Lock the password for the current remote user"
+- name: "Set password and unlock the remote user for console login"
   ansible.builtin.user:
-    name: "{{ ansible_facts.user_id }}"
+    name: "{{ ansible_user }}"
     state: present
-    password: "{{ sops.mydefaults.password_hashed | default('', true) }}"
-    password_lock: true
-  when: ansible_facts.user_id != 'root'
+    password: "{{ sops.mydefaults.password_hashed }}"
+    password_lock: false
+  when: ansible_user != 'root'
 
 - name: "Set up qemu-guest-agent on QEMU/KVM guests"
   when:
