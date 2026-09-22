@@ -38,6 +38,8 @@
   become: true
   gather_facts: true
   vars:
+    security_ssh_allowed_users: >-
+      {{ [ansible_user] + ([hermes_git_username | default('hermes-git')] if inventory_hostname == 'homeeins-1' else []) }}
     security_sudoers_passwordless:
       - "{{ ansible_user }}"
   roles:

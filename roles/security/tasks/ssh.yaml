@@ -13,6 +13,10 @@
     validate: "sshd -T -f %s"
     mode: "0644"
   loop:
+    - regexp: "^PubkeyAuthentication"
+      line: "PubkeyAuthentication {{ security_ssh_pubkey_authentication }}"
+    - regexp: "^AuthenticationMethods"
+      line: "AuthenticationMethods {{ security_ssh_authentication_methods }}"
     - regexp: "^PasswordAuthentication"
       line: "PasswordAuthentication {{ security_ssh_password_authentication }}"
     - regexp: "^PermitRootLogin"
@@ -23,12 +27,16 @@
       line: "UseDNS {{ security_ssh_usedns }}"
     - regexp: "^PermitEmptyPasswords"
       line: "PermitEmptyPasswords {{ security_ssh_permit_empty_password }}"
-    - regexp: "^ChallengeResponseAuthentication"
-      line: "ChallengeResponseAuthentication {{ security_ssh_challenge_response_auth }}"
+    - regexp: "^(ChallengeResponseAuthentication|KbdInteractiveAuthentication)\\s+"
+      line: "KbdInteractiveAuthentication {{ security_ssh_kbd_interactive_authentication }}"
     - regexp: "^GSSAPIAuthentication"
       line: "GSSAPIAuthentication {{ security_ssh_gss_api_authentication }}"
     - regexp: "^X11Forwarding"
       line: "X11Forwarding {{ security_ssh_x11_forwarding }}"
+    - regexp: "^AllowAgentForwarding"
+      line: "AllowAgentForwarding {{ security_ssh_allow_agent_forwarding }}"
+    - regexp: "^PermitTunnel"
+      line: "PermitTunnel {{ security_ssh_permit_tunnel }}"
   notify:
     - Reload systemd daemon
     - Restart SSH
@@ -39,22 +47,9 @@
     regexp: "^AllowUsers"
     line: "AllowUsers {{ security_ssh_allowed_users | join(' ') }}"
     state: present
-    create: true
     validate: "sshd -T -f %s"
     mode: "0644"
   when: security_ssh_allowed_users | length > 0
-  notify: Restart SSH
-
-- name: Add configured SSH groups
-  ansible.builtin.lineinfile:
-    path: "{{ security_ssh_config_path }}"
-    regexp: "^AllowGroups"
-    line: "AllowGroups {{ security_ssh_allowed_groups | join(' ') }}"
-    state: present
-    create: true
-    validate: "sshd -T -f %s"
-    mode: "0644"
-  when: security_ssh_allowed_groups | length > 0
   notify: Restart SSH
 
 - name: Configure passwordless sudo
