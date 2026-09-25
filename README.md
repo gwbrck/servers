@@ -92,6 +92,18 @@ SSH-Socket-Aktivierung wird gestoppt und deaktiviert. Der SSH-Port wird ueber
 Weitere OS-Familien (z. B. openSUSE) benoetigen insbesondere eine eigene
 Update-Konfiguration; die Rolle bricht dort vor Aenderungen ab.
 
+### Fish-Konfiguration
+
+`host_setup` installiert fuer den Administrator den portablen Teil der
+Fish-Konfiguration: Prompt, Farben und allgemeine Abbreviations. Die Quelldateien
+liegen im Dotfiles-Repository unter `dot_config/private_fish`; Environment- und
+Desktop-Einstellungen werden nicht auf die Server uebernommen.
+
+Die Rolle laedt diese Dateien direkt von GitHub. Repository-Basis und Git-Ref
+koennen mit `host_setup_fish_raw_base_url` und `host_setup_fish_ref` angepasst
+werden. Fuer reproduzierbare Deployments kann statt `main` ein Commit-Hash
+gesetzt werden.
+
 ## Struktur
 
 ```

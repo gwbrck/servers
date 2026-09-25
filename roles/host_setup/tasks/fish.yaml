@@ -1,0 +1,29 @@
+---
+- name: Ensure administrator Fish configuration directories exist
+  ansible.builtin.file:
+    path: "/home/{{ bootstrap_admin_user }}/{{ item }}"
+    state: directory
+    owner: "{{ bootstrap_admin_user }}"
+    group: "{{ bootstrap_admin_user }}"
+    mode: "0755"
+  loop:
+    - .config
+    - .config/fish
+    - .config/fish/conf.d
+    - .config/fish/functions
+
+- name: Install administrator Fish configuration from dotfiles
+  ansible.builtin.get_url:
+    url: >-
+      {{ host_setup_fish_raw_base_url }}/{{ host_setup_fish_ref }}/dot_config/private_fish/{{ item }}
+    dest: "/home/{{ bootstrap_admin_user }}/.config/fish/{{ item }}"
+    owner: "{{ bootstrap_admin_user }}"
+    group: "{{ bootstrap_admin_user }}"
+    mode: "0644"
+  loop:
+    - conf.d/10-appearance.fish
+    - conf.d/20-abbreviations.fish
+    - functions/fish_prompt.fish
+    - functions/fish_right_prompt.fish
+    - functions/fish_mode_prompt.fish
+
