@@ -36,6 +36,32 @@ ansible-playbook main.yaml --list-tags
 |------|----------|
 | `pivpn` | VPN-Gateway (Tailscale Exit-Node) |
 | `homeeins-1` | Haupt-Server (Docker-Services) |
+| `hermes` | Hermes-Server (System Defaults, Tailscale) |
+
+## Erstzugang per SSH
+
+Vor den Rollen probiert der Bootstrap fuer jeden Host den Inventory-Benutzer und
+`root` jeweils auf dem konfigurierten SSH-Port (`security_ssh_port`, derzeit 6861)
+und auf Port 22. Der erste funktionierende Zugang wird genutzt. Danach legt
+`roles/mydefaults/tasks/account.yaml` den Inventory-Benutzer an bzw. aktualisiert
+ihn, nimmt ihn in die Gruppe `sudo` auf, installiert seinen SSH-Schluessel und
+richtet passwortloses sudo ein. Erst nach erfolgreichem Login samt sudo wird SSH
+gehaertet und auf den Zielport umgestellt.
+
+In `~/OpenCloud/Dots/server_infra.yaml` werden dazu bestehende Eintraege verwendet:
+
+```yaml
+mydefaults:
+  password_hashed: "$6$..."  # bereits gehashter Passwortwert
+  public_ssh_key: "ssh-ed25519 ..."
+```
+
+Bei frischen Rechnern muss der Controller zunaechst als `root` (per SSH-Key oder
+mit `ansible-playbook main.yaml -k`) einloggen koennen. Bei Schluesselzugang muss
+der private Schluessel zu `public_ssh_key` auf dem Controller verfuegbar sein.
+Fuer Hermes zeigt der Inventory-Name `hermes` direkt auf den SSH-Hostnamen;
+`ansible-playbook main.yaml --limit 'hermes,localhost'` fuehrt SOPS-Laden,
+Bootstrap, System Defaults, Tailscale und die Hermes-Umgebungsdatei aus.
 
 ## Services
 
@@ -59,6 +85,9 @@ ansible-playbook main.yaml --list-tags
 
 Die lokale Rolle `security` unterstuetzt Debian und Ubuntu. SSH, Sudo, Fail2ban
 und automatische Sicherheitsupdates werden ueber `security_*`-Variablen konfiguriert.
+SSH wird als dauerhaft aktivierter Dienst betrieben; eine vorhandene
+SSH-Socket-Aktivierung wird gestoppt und deaktiviert. Der SSH-Port wird ueber
+`security_ssh_port` in `sshd_config` festgelegt.
 Weitere OS-Familien (z. B. openSUSE) benoetigen insbesondere eine eigene
 Update-Konfiguration; die Rolle bricht dort vor Aenderungen ab.
 

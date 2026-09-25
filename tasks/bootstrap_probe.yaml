@@ -1,0 +1,22 @@
+---
+# Evaluate here, not on the include loop: includes are queued before execution.
+- name: Try candidate only until a working connection is found
+  when: bootstrap_connection is not defined
+  block:
+    - name: Probe SSH connection with administrative privileges
+      become: true
+      become_user: root
+      ansible.builtin.ping:
+      vars:
+        ansible_user: "{{ bootstrap_candidate.user }}"
+        ansible_port: "{{ bootstrap_candidate.port }}"
+        ansible_ssh_timeout: 5
+      register: bootstrap_probe_result
+      ignore_errors: true
+      ignore_unreachable: true
+      changed_when: false
+
+    - name: Remember first working SSH connection
+      ansible.builtin.set_fact:
+        bootstrap_connection: "{{ bootstrap_candidate }}"
+      when: bootstrap_probe_result.ping | default('') == 'pong'

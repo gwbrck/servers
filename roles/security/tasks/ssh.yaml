@@ -2,6 +2,7 @@
 - name: Ensure SSH daemon is running
   ansible.builtin.service:
     name: "{{ security_sshd_name }}"
+    enabled: true
     state: "{{ security_sshd_state }}"
 
 - name: Update SSH configuration
@@ -71,3 +72,40 @@
     validate: "visudo -cf %s"
     mode: "0440"
   loop: "{{ security_sudoers_passworded }}"
+
+- name: Inspect SSH socket activation
+  ansible.builtin.command:
+    argv:
+      - systemctl
+      - show
+      - "{{ security_sshd_name }}.socket"
+      - --property=LoadState
+  register: security_ssh_socket_status
+  changed_when: false
+  check_mode: false
+
+- name: Validate SSH configuration before disabling socket activation
+  ansible.builtin.command: "sshd -t -f {{ security_ssh_config_path | quote }}"
+  changed_when: false
+
+- name: Disable and stop SSH socket activation
+  ansible.builtin.systemd_service:
+    name: "{{ security_sshd_name }}.socket"
+    enabled: false
+    state: stopped
+  when: "'LoadState=loaded' in security_ssh_socket_status.stdout_lines"
+  notify: Restart SSH
+
+- name: Apply SSH configuration before changing connection port
+  ansible.builtin.meta: flush_handlers
+
+- name: Use the hardened SSH port
+  ansible.builtin.set_fact:
+    ansible_port: "{{ security_ssh_port }}"
+
+- name: Reset the SSH connection after changing ports
+  ansible.builtin.meta: reset_connection
+
+- name: Verify SSH on the hardened port
+  ansible.builtin.wait_for_connection:
+    timeout: 60

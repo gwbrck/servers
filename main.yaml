@@ -31,10 +31,40 @@
           zotero_mcp: "{{ sops_raw.zotero_mcp | default({}, true) }}"
           hermes_git: "{{ sops_raw.hermes_git | default({}, true) }}"
 
+- name: Discover working SSH access
+  hosts: all:!localhost
+  gather_facts: false
+  tags: [always]
+  tasks:
+    - name: Remember the configured administrator
+      ansible.builtin.set_fact:
+        bootstrap_admin_user: "{{ ansible_user }}"
+
+    - name: Try administrator and root on configured and initial SSH ports
+      ansible.builtin.include_tasks: tasks/bootstrap_probe.yaml
+      loop:
+        - { user: "{{ bootstrap_admin_user }}", port: "{{ security_ssh_port }}" }
+        - { user: "{{ bootstrap_admin_user }}", port: 22 }
+        - { user: root, port: "{{ security_ssh_port }}" }
+        - { user: root, port: 22 }
+      loop_control:
+        loop_var: bootstrap_candidate
+
+    - name: Require SSH access
+      ansible.builtin.assert:
+        that: bootstrap_connection is defined
+        fail_msg: "No SSH connection with root privileges succeeded for {{ inventory_hostname }} as {{ bootstrap_admin_user }} or root on ports {{ security_ssh_port }} and 22. Check SSH keys, host keys and sudo access (use -k for SSH password login or -K for a sudo password)."
+
+    - name: Use the working connection for provisioning
+      ansible.builtin.set_fact:
+        ansible_user: "{{ bootstrap_connection.user }}"
+        ansible_port: "{{ bootstrap_connection.port }}"
+
 - name: System Defaults
   hosts:
     - pivpn
     - homeeins-1
+    - hermes
   become: true
   gather_facts: true
   vars:
@@ -43,17 +73,27 @@
     security_sudoers_passwordless:
       - "{{ ansible_user }}"
   roles:
-    - role: security
-      tags: [defaults, security]
     - role: mydefaults
       tags: [defaults]
+    - role: security
+      tags: [defaults, security]
+
+- name: Docker
+  hosts:
+    - pivpn
+    - homeeins-1
+  become: true
+  gather_facts: true
+  roles:
     - role: geerlingguy.docker
       tags: [defaults, docker]
+
 
 - name: Tailscale
   hosts:
     - pivpn
     - homeeins-1
+    - hermes
   become: true
   gather_facts: true
   tags: [tailscale]
@@ -195,17 +235,25 @@
     - vdirsyncer
 
 - name: Deploy Hermes environment
-  hosts: hermes-vm
+  hosts: hermes
   become: true
   gather_facts: false
   tags: [hermes]
   vars:
     hermes_sops_file: /Users/gwbrck/OpenCloud/Dots/hermes.sops.env
   tasks:
+    - name: Ensure Hermes SOPS directory exists
+      ansible.builtin.file:
+        path: "/home/{{ ansible_user }}/.config/sops"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: "0700"
+
     - name: Copy encrypted Hermes environment
       ansible.builtin.copy:
         src: "{{ hermes_sops_file }}"
-        dest: /home/gwbrck/.config/sops/hermes.sops.env
-        owner: gwbrck
-        group: gwbrck
+        dest: "/home/{{ ansible_user }}/.config/sops/hermes.sops.env"
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
         mode: "0600"

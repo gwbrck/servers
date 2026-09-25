@@ -1,8 +1,14 @@
-- name: "Validate hashed password availability"
-  ansible.builtin.assert:
-    that:
-      - (sops.mydefaults.password_hashed | default('', true)) | length > 0
-    fail_msg: "sops.mydefaults.password_hashed is empty. Provide a hashed password via SOPS."
+- name: Provision administrator before other system defaults
+  ansible.builtin.import_tasks: account.yaml
+  tags: [always]
+
+- name: Install standard command-line tools
+  become: true
+  ansible.builtin.package:
+    name:
+      - git
+      - curl
+    state: present
 
 - name: "Install global alias profile script"
   ansible.builtin.copy:
@@ -21,14 +27,6 @@
     state: present
     password: "{{ sops.mydefaults.password_hashed | default('', true) }}"
     password_lock: true
-
-- name: "Set password and unlock the remote user for console login"
-  ansible.builtin.user:
-    name: "{{ ansible_user }}"
-    state: present
-    password: "{{ sops.mydefaults.password_hashed }}"
-    password_lock: false
-  when: ansible_user != 'root'
 
 - name: "Set up qemu-guest-agent on QEMU/KVM guests"
   when:

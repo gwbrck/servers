@@ -4,4 +4,5 @@ all:
       ansible_user: gwbrck
     homeeins-1:
       ansible_user: gwbrck
-    hermes-vm:
+    hermes:
+      ansible_user: gwbrck
