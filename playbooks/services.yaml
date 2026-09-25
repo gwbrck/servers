@@ -1,0 +1,56 @@
+---
+- name: Deploy applications
+  hosts: application_hosts
+  become: true
+  roles:
+    - role: traefik
+      tags: [traefik]
+    - role: vaultwarden
+      tags: [vaultwarden]
+    - role: audiobookshelf
+      tags: [audiobookshelf]
+    - role: ntfy
+      tags: [ntfy]
+    - role: opencloud
+      tags: [opencloud]
+    - role: actual_budget
+      tags: [actual_budget]
+    - role: freshrss
+      tags: [freshrss]
+
+- name: Deploy Immich
+  hosts: application_hosts
+  become: true
+  tags: [immich]
+  roles:
+    - immich
+
+- name: Deploy monitoring
+  hosts: application_hosts
+  become: true
+  roles:
+    - role: uptime_kuma
+      tags: [uptime_kuma]
+    - role: system_monitor
+      tags: [system_monitor]
+
+- name: Deploy KiwiFS
+  hosts: application_hosts
+  become: true
+  tags: [kiwifs]
+  roles:
+    - kiwifs
+
+- name: Deploy Zotero MCP
+  hosts: application_hosts
+  become: true
+  tags: [zotero_mcp]
+  roles:
+    - zotero_mcp
+
+- name: Deploy hermes-git
+  hosts: application_hosts
+  become: true
+  tags: [hermes_git]
+  roles:
+    - hermes_git

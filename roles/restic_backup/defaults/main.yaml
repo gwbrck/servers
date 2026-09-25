@@ -7,6 +7,19 @@ restic_backup_config_dir: "{{ services_compose_base }}/resticprofile"
 restic_backup_config_file: "{{ restic_backup_config_dir }}/profiles.yaml"
 restic_backup_env_file: "{{ restic_backup_config_dir }}/restic.env"
 
+# Beide Zeitpläne verwenden dieselben Backup-Profile in derselben Reihenfolge.
+restic_backup_profile_names:
+  - vaultwarden
+  - actual
+  - opencloud
+  - audiobookshelf
+  - archiv_gregor
+  - freshrss
+  - immich
+  - uptime_kuma
+  - kiwifs
+  - zotero_mcp
+
 restic_backup_arch_map:
   x86_64: "linux_amd64"
   amd64: "linux_amd64"

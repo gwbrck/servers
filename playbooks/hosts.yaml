@@ -1,0 +1,15 @@
+---
+- name: Setup vdirsyncer
+  hosts: sync_hosts
+  become: true
+  tags: [vdirsyncer]
+  roles:
+    - vdirsyncer
+
+- name: Deploy Hermes environment
+  hosts: hermes
+  become: true
+  gather_facts: false
+  tags: [hermes]
+  roles:
+    - hermes

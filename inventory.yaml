@@ -1,8 +1,19 @@
 all:
-  hosts:
-    pivpn:
-      ansible_user: gwbrck
-    homeeins-1:
-      ansible_user: gwbrck
-    hermes:
-      ansible_user: gwbrck
+  vars:
+    ansible_user: gwbrck
+  children:
+    managed_servers:
+      hosts:
+        pivpn:
+        homeeins-1:
+        hermes:
+    docker_hosts:
+      hosts:
+        pivpn:
+        homeeins-1:
+    application_hosts:
+      hosts:
+        homeeins-1:
+    sync_hosts:
+      hosts:
+        pivpn:

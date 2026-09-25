@@ -1,0 +1,29 @@
+---
+- name: Discover working SSH access
+  hosts: managed_servers
+  gather_facts: false
+  tags: [always]
+  tasks:
+    - name: Remember the configured administrator
+      ansible.builtin.set_fact:
+        bootstrap_admin_user: "{{ ansible_user }}"
+
+    - name: Try administrator and root on configured and initial SSH ports
+      ansible.builtin.include_tasks: ../tasks/bootstrap_probe.yaml
+      loop:
+        - { user: "{{ bootstrap_admin_user }}", port: "{{ security_ssh_port }}" }
+        - { user: "{{ bootstrap_admin_user }}", port: 22 }
+        - { user: root, port: "{{ security_ssh_port }}" }
+        - { user: root, port: 22 }
+      loop_control:
+        loop_var: bootstrap_candidate
+
+    - name: Require SSH access
+      ansible.builtin.assert:
+        that: bootstrap_connection is defined
+        fail_msg: "No SSH connection with root privileges succeeded for {{ inventory_hostname }} as {{ bootstrap_admin_user }} or root on ports {{ security_ssh_port }} and 22. Check SSH keys, host keys and sudo access (use -k for SSH password login or -K for a sudo password)."
+
+    - name: Use the working connection for provisioning
+      ansible.builtin.set_fact:
+        ansible_user: "{{ bootstrap_connection.user }}"
+        ansible_port: "{{ bootstrap_connection.port }}"

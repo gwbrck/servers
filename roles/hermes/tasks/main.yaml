@@ -1,0 +1,16 @@
+---
+- name: Ensure Hermes SOPS directory exists
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/.config/sops"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0700"
+
+- name: Copy encrypted Hermes environment
+  ansible.builtin.copy:
+    src: "{{ hermes_sops_file }}"
+    dest: "/home/{{ ansible_user }}/.config/sops/hermes.sops.env"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"

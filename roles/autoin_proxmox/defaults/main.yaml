@@ -14,11 +14,11 @@ autoin_proxmox_iso_container_repo_key_url: "https://enterprise.proxmox.com/debia
 
 # Host identity and root access data.
 autoin_proxmox_fqdn: "{{ sops.proxmox.fqdn }}"
-autoin_proxmox_root_password_hash: "{{ sops.mydefaults.password_hashed }}"
+autoin_proxmox_root_password_hash: "{{ sops.host_setup.password_hashed }}"
 autoin_proxmox_root_authorized_keys:
-  - "{{ sops.mydefaults.public_ssh_key }}"
+  - "{{ sops.host_setup.public_ssh_key }}"
 
 # Admin account provisioned in the post-install script.
-autoin_proxmox_admin_user: "{{ sops.mydefaults.username }}"
-autoin_proxmox_admin_password_hash: "{{ sops.mydefaults.password_hashed }}"
-autoin_proxmox_admin_ssh_public_key: "{{ sops.mydefaults.public_ssh_key }}"
+autoin_proxmox_admin_user: "{{ sops.host_setup.username }}"
+autoin_proxmox_admin_password_hash: "{{ sops.host_setup.password_hashed }}"
+autoin_proxmox_admin_ssh_public_key: "{{ sops.host_setup.public_ssh_key }}"

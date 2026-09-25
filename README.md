@@ -11,10 +11,11 @@ Ansible-basierte Infrastruktur zum Provisionieren und Verwalten selbstgehosteter
 ## Setup
 
 ```bash
-# Ansible-Dependencies installieren
-ansible-galaxy install -r requirements.yaml
+# Ansible-Dependencies installieren (Rollen ausserhalb des Repositories)
+ansible-galaxy role install -r requirements.yaml -p ~/.ansible/roles
+ansible-galaxy collection install -r requirements.yaml
 
-# Alle Plays ausfuehren
+# Alle Plays ausfuehren (Einstiegspunkt bleibt main.yaml)
 ansible-playbook main.yaml
 
 # Einzelnen Service deployen (via Tags)
@@ -32,18 +33,18 @@ ansible-playbook main.yaml --list-tags
 
 ## Hosts
 
-| Host | Funktion |
-|------|----------|
-| `pivpn` | VPN-Gateway (Tailscale Exit-Node) |
-| `homeeins-1` | Haupt-Server (Docker-Services) |
-| `hermes` | Hermes-Server (System Defaults, Tailscale) |
+| Host         | Funktion                                   |
+|--------------|--------------------------------------------|
+| `pivpn`      | VPN-Gateway (Tailscale Exit-Node)          |
+| `homeeins-1` | Haupt-Server (Docker-Services)             |
+| `hermes`     | Hermes-Server (System Defaults, Tailscale) |
 
 ## Erstzugang per SSH
 
 Vor den Rollen probiert der Bootstrap fuer jeden Host den Inventory-Benutzer und
 `root` jeweils auf dem konfigurierten SSH-Port (`security_ssh_port`, derzeit 6861)
 und auf Port 22. Der erste funktionierende Zugang wird genutzt. Danach legt
-`roles/mydefaults/tasks/account.yaml` den Inventory-Benutzer an bzw. aktualisiert
+`roles/host_setup/tasks/account.yaml` den Inventory-Benutzer an bzw. aktualisiert
 ihn, nimmt ihn in die Gruppe `sudo` auf, installiert seinen SSH-Schluessel und
 richtet passwortloses sudo ein. Erst nach erfolgreichem Login samt sudo wird SSH
 gehaertet und auf den Zielport umgestellt.
@@ -51,7 +52,7 @@ gehaertet und auf den Zielport umgestellt.
 In `~/OpenCloud/Dots/server_infra.yaml` werden dazu bestehende Eintraege verwendet:
 
 ```yaml
-mydefaults:
+host_setup:
   password_hashed: "$6$..."  # bereits gehashter Passwortwert
   public_ssh_key: "ssh-ed25519 ..."
 ```
@@ -94,22 +95,43 @@ Update-Konfiguration; die Rolle bricht dort vor Aenderungen ab.
 ## Struktur
 
 ```
-main.yaml                    # Haupt-Playbook
-inventory.yaml               # Hosts
+main.yaml                    # Reihenfolge der importierten Playbooks
+playbooks/
+  secrets.yaml               # SOPS entschluesseln
+  bootstrap.yaml             # SSH-Zugang erkennen
+  system.yaml                # System Defaults und Docker
+  network.yaml               # Tailscale
+  services.yaml              # Anwendungen und Monitoring
+  backups.yaml               # Restic
+  hosts.yaml                 # Host-spezifische Dienste
+inventory.yaml               # Hosts und Funktionsgruppen
 requirements.yaml            # Ansible-Dependencies
 ansible.cfg                  # Ansible-Konfiguration
+group_vars/all.yaml          # Gemeinsame Variablen
+tasks/bootstrap_probe.yaml   # SSH-Verbindungsprobe
 roles/
-  {service}/
+  {service}/                 # Auch tailscale und hermes
     defaults/main.yaml       # Variablen-Defaults
     tasks/main.yaml           # Deployment-Tasks
     templates/                # Jinja2-Templates (Compose, .env)
     handlers/main.yaml        # Event-Handler (optional)
 ```
 
+`inventory.yaml` definiert `managed_servers`, `docker_hosts`,
+`application_hosts` und `sync_hosts`. Neue Hosts werden ihren Funktionen
+zugeordnet; neue Anwendungen werden in `playbooks/services.yaml` eingetragen.
+`--tags <service>` funktioniert weiterhin ueber `main.yaml`. Die Services mit
+Restart-Handlern (Immich, KiwiFS, Zotero MCP) behalten eigene Plays, damit die
+Handler vor dem naechsten Service ausgefuehrt werden.
+
+Die Backup-Profilliste fuer beide Zeitplaene liegt in
+`roles/restic_backup/defaults/main.yaml` (`restic_backup_profile_names`);
+die zugehoerigen Backup-Befehle stehen im resticprofile-Template.
+
 ## Secrets
 
 Alle Secrets werden via SOPS verwaltet und liegen **nicht** im Repository.
-Die verschluesselte Datei wird beim Start von `main.yaml` entschluesselt und als `sops`-Variable an alle Rollen weitergegeben.
+Die verschluesselte Datei wird in `playbooks/secrets.yaml` entschluesselt und als `sops`-Variable an alle Rollen weitergegeben. Neue Sektionen sind ohne zusaetzliches Mapping verfuegbar.
 
 Fuer KiwiFS wird folgende Sektion benoetigt. `embedding.provider` kann `mistral` oder `openai` sein; Modell, Basis-URL und Dimensionen werden passend vorbelegt.
 

@@ -3,9 +3,9 @@
   ansible.builtin.assert:
     that:
       - bootstrap_admin_user != 'root'
-      - (sops.mydefaults.password_hashed | default('', true)) | length > 0
-      - (sops.mydefaults.public_ssh_key | default('', true)) | length > 0
-    fail_msg: "Set a non-root ansible_user and provide mydefaults.password_hashed and mydefaults.public_ssh_key in SOPS."
+      - (sops.host_setup.password_hashed | default('', true)) | length > 0
+      - (sops.host_setup.public_ssh_key | default('', true)) | length > 0
+    fail_msg: "Set a non-root ansible_user and provide host_setup.password_hashed and host_setup.public_ssh_key in SOPS."
 
 - name: Refresh APT package lists before installing bootstrap packages
   become: true
@@ -31,7 +31,7 @@
     append: true
     shell: /usr/bin/fish
     create_home: true
-    password: "{{ sops.mydefaults.password_hashed }}"
+    password: "{{ sops.host_setup.password_hashed }}"
     password_lock: false
     state: present
 
@@ -39,7 +39,7 @@
   become: true
   ansible.posix.authorized_key:
     user: "{{ bootstrap_admin_user }}"
-    key: "{{ sops.mydefaults.public_ssh_key }}"
+    key: "{{ sops.host_setup.public_ssh_key }}"
     state: present
 
 - name: Ensure sudoers directory exists

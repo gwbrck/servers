@@ -1,0 +1,7 @@
+---
+- name: Setup restic backups
+  hosts: application_hosts
+  become: true
+  tags: [restic_backup]
+  roles:
+    - restic_backup

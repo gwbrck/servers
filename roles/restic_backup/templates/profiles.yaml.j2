@@ -11,16 +11,9 @@ groups:
     description: "Tägliche Backups aller Profile"
     continue-on-error: true
     profiles:
-      - vaultwarden
-      - actual
-      - opencloud
-      - audiobookshelf
-      - archiv_gregor
-      - freshrss
-      - immich
-      - uptime_kuma
-      - kiwifs
-      - zotero_mcp
+{% for profile in restic_backup_profile_names %}
+      - {{ profile }}
+{% endfor %}
     schedules:
       backup:
         at: "*-*-* 03:30:00"
@@ -31,16 +24,9 @@ groups:
     description: "Wöchentliche Checks aller Profile"
     continue-on-error: true
     profiles:
-      - vaultwarden
-      - actual
-      - opencloud
-      - audiobookshelf
-      - archiv_gregor
-      - freshrss
-      - immich
-      - uptime_kuma
-      - kiwifs
-      - zotero_mcp
+{% for profile in restic_backup_profile_names %}
+      - {{ profile }}
+{% endfor %}
     schedules:
       check:
         at: "Sun *-*-* 04:30:00"

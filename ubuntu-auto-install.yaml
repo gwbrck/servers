@@ -10,7 +10,7 @@
         sops_raw: "{{ lookup('community.sops.sops', sops_file, errors='ignore') | from_yaml }}"
       ansible.builtin.set_fact:
         sops_data:
-          mydefaults: "{{ sops_raw.mydefaults | default({}, true) }}"
+          host_setup: "{{ sops_raw.host_setup | default({}, true) }}"
           ubuntu: "{{ sops_raw.ubuntu | default({}, true) }}"
 
 - name: Build custom Ubuntu autoinstall ISO

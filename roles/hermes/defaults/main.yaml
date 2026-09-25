@@ -1,0 +1,2 @@
+---
+hermes_sops_file: "{{ lookup('env', 'HOME') }}/OpenCloud/Dots/hermes.sops.env"

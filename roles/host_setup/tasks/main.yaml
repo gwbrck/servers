@@ -25,7 +25,7 @@
   ansible.builtin.user:
     name: root
     state: present
-    password: "{{ sops.mydefaults.password_hashed | default('', true) }}"
+    password: "{{ sops.host_setup.password_hashed | default('', true) }}"
     password_lock: true
 
 - name: "Set up qemu-guest-agent on QEMU/KVM guests"

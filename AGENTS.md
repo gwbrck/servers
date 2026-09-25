@@ -14,12 +14,14 @@ Ansible-basierte Infrastruktur zum Provisionieren selbstgehosteter Services.
 |------|----------|
 | `pivpn` | VPN-Gateway (Tailscale Exit-Node) |
 | `homeeins-1` | Haupt-Server (alle Docker-Services) |
+| `hermes` | Hermes-Server (System Defaults, Tailscale) |
 
 ## Struktur
 
 ```
-main.yaml                    # Haupt-Playbook (SOPS-Loading + alle Plays)
-inventory.yaml               # Hosts
+main.yaml                    # Importiert die Playbooks in Ausfuehrungsreihenfolge
+playbooks/                   # secrets, bootstrap, system, network, services, backups, hosts
+inventory.yaml               # Hosts und Funktionsgruppen
 requirements.yaml            # Ansible-Galaxy Dependencies
 ansible.cfg                  # Ansible-Konfiguration
 group_vars/all.yaml          # Globale Variablen (Basispfade, Traefik-Defaults)
@@ -61,6 +63,7 @@ Alle Variablen folgen dem Schema `{rolle}_{zweck}`:
 - Alle Secrets liegen in `~/OpenCloud/Dots/server_infra.yaml` (SOPS-verschluesselt)
 - Secrets werden **nie** ins Repository committet
 - Zugriff in Templates/Rollen: `{{ sops.{rolle}.key }}`
+- `playbooks/secrets.yaml` stellt die entschluesselte YAML-Map direkt bereit; kein Mapping pro Service notwendig
 
 ### Traefik
 
@@ -77,10 +80,10 @@ Beides ist erlaubt:
 
 ### Backup (restic + resticprofile)
 
-- Backup-Profile in `roles/restic_backup/templates/profiles.yaml.j2`
+- Backup-Profile in `roles/restic_backup/templates/profiles.yaml.j2`; gemeinsame Gruppenliste in `roles/restic_backup/defaults/main.yaml` (`restic_backup_profile_names`)
 - Jedes Profile `inherit: default` (uebernimmt S3-Repo, Retention, ntfy-Notifications)
 - Bei DB-basierten Services: Container stoppen, backup, starten (ausser es gibt einen speziellen DB-Backup-Befehl wie `/vaultwarden backup` oder `pg_dumpall`)
-- ntfy-Notifications und Uptime-Kuma Push werden vererbt
+- ntfy-Notifications werden vererbt; der Uptime-Kuma Push ist derzeit am letzten Profil `zotero_mcp` konfiguriert
 
 ## Neuen Service hinzufuegen
 
@@ -96,15 +99,7 @@ In `~/OpenCloud/Dots/server_infra.yaml` eine neue Sektion:
   # db_password: "..."
 ```
 
-### 2. SOPS-Mapping in main.yaml
-
-In der `Map SOPS secrets`-Task (ca. Zeile 31) eine Zeile hinzufuegen:
-
-```yaml
-{rolle}: "{{ sops_raw.{rolle} | default({}, true) }}"
-```
-
-### 3. Rolle erstellen
+### 2. Rolle erstellen
 
 Verzeichnisstruktur:
 
@@ -200,20 +195,19 @@ networks:
     external: true
 ```
 
-### 4. Playbook-Eintrag in main.yaml
+### 3. Playbook-Eintrag in playbooks/services.yaml
 
-Neuen Play vor `restic_backup` einfuegen:
+Die Rolle in die Liste des Plays `Deploy applications` aufnehmen:
 
 ```yaml
-- name: Setup {rolle}
-  hosts: homeeins-1
-  become: true
-  tags: [{rolle}]
-  roles:
-    - {rolle}
+    - role: {rolle}
+      tags: [{rolle}]
 ```
 
-### 5. Backup-Integration
+Fuer Rollen mit Restart-Handlern einen eigenen Play vor den Backups verwenden,
+damit der Handler vor dem naechsten Service ausgefuehrt wird.
+
+### 4. Backup-Integration
 
 In `roles/restic_backup/templates/profiles.yaml.j2`:
 
@@ -233,12 +227,12 @@ In `roles/restic_backup/templates/profiles.yaml.j2`:
 
 Ohne DB (statische Daten) kann `run-before`/`run-after` entfallen.
 
-**Profile in Backup-Gruppen aufnehmen** (`nightly-backup` und `weekly-check`):
+**Profil in die gemeinsame Backup-Gruppenliste aufnehmen** (`roles/restic_backup/defaults/main.yaml`):
 
 ```yaml
-    profiles:
-      # ... bestehende ...
-      - {rolle}
+restic_backup_profile_names:
+  # ... bestehende ...
+  - {rolle}
 ```
 
 Optional: Uptime-Kuma Push am letzten Profil der Gruppe:
@@ -249,7 +243,7 @@ Optional: Uptime-Kuma Push am letzten Profil der Gruppe:
           url: {{ restic_backup_uptime_kuma_push_url }}
 ```
 
-### 6. README.md
+### 5. README.md
 
 Service in der Tabelle ergaenzen.
 
@@ -275,5 +269,6 @@ ansible-playbook main.yaml --list-tags
 ## Ansible-Dependencies
 
 ```bash
-ansible-galaxy install -r requirements.yaml
+ansible-galaxy role install -r requirements.yaml -p ~/.ansible/roles
+ansible-galaxy collection install -r requirements.yaml
 ```
